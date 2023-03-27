@@ -1,4 +1,4 @@
-classdef DP
+classdef MSO
     % methods:
     %   WG.channel_amp(connectionID, chNum, amp)
     %   sets the amplitude value of the Trueform 33600A generator
