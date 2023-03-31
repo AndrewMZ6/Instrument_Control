@@ -38,7 +38,7 @@ classdef DG
 %             sig = Test_signals.normalized_ofdm;
 %             write(instr_object, num2str(sig));
             s = query(instr_object, '*IDN?');
-            disp(['The instrument answer to IDN? is: ', s]);
+            disp(['The instrument answer to IDN?', s]);
 
 
             fclose(instr_object);
@@ -58,12 +58,10 @@ classdef DG
             fopen(instr_object);
 
             fprintf(instr_object, [':DATA VOLATILE,', s_string]);
-            fprintf(instr_object, '*WAI');
-            fprintf(instr_object, ':DIGI:RATE 40e6');
+            fprintf(instr_object, ':DIGI:RATE 50e6');
 
             er = query(instr_object, 'SYST:ERR?');
             disp(['MY ERROR: ' , er]);
-            fprintf(instr_object, ':OUTPut ON');
             fclose(instr_object);
 
         end

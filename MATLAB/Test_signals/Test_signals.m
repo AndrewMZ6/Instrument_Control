@@ -29,7 +29,7 @@ classdef Test_signals
       sig_ofdm_shifted_time = ifft(sig_ofdm_shifted);
 
 
-      fs = 50e6;
+      fs = 40e6;
       fc = 10e6;
       t = 0:1/fs:(interpolated_size - 1)/fs;
 
