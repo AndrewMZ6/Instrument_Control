@@ -45,5 +45,21 @@ classdef Test_signals
       output_signal = rf_sig_ofdm;
 
     end
+
+    function [sins, freqline] = two_sins()
+        
+        N = 10e3;
+        fs = 20e6;
+        fc1 = 5e4;
+        fc2 = 10e4;
+
+        freqline = 0:fs/N:fs - 1;
+
+        timeline = 0:1/fs:(N -1)/fs;
+        sin1 = sin(2*pi*fc1*timeline);
+        sin2 = sin(2*pi*fc2*timeline);
+        sins = sin1 + sin2;
+        sins = sins/max(sins);
+    end
   end
 end
