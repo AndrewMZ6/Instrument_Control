@@ -12,7 +12,7 @@ classdef MSO
     end
     
     methods (Static)
-        function instr_object = connect(connectionID)
+        function instr_object = connect_visadev(connectionID)
             instr_object = visadev(connectionID);
             instr_object.Timeout = 10;
         end
@@ -33,19 +33,36 @@ classdef MSO
             
         end
 
-        function data = get_data(connectionID)
-            instr_object = MSO.connect_visa(connectionID);
-            fopen(instr_object);
+        function revived_sig = get_data_normal(connectionID)
+            instr_object = MSO.connect_visadev(connectionID);
             
-            fprintf(instr_object, ':WAV:SOUR CHAN1');
+            write(instr_object, ':WAV:SOUR CHAN1');
 
-            fprintf(instr_object, ':WAV:MODE NORMal');
-            fprintf(instr_object, ':WAV:FORM WORD');
+            write(instr_object, ':WAV:MODE NORMal');
+            write(instr_object, ':WAV:FORM BYTE');
+
+            pre = writeread(instr_object, ':WAV:PRE?');
+
+            write(instr_object, ':WAV:DATA?');
+            data2 = readbinblock(instr_object, 'uint8');
 
 
-            data = query(instr_object, ':WAV:DATA?');
-            fclose(instr_object);
-%             delete(instr_object);
+            split_pre = split(pre, ',');
+            yincrement = str2num(split_pre(8));
+            yref = str2num(split_pre(10));
+
+
+            revived_sig = zeros(1, length(data2));
+            ypositive_indexes = find(data2 > yref);
+            ynegative_indexes = find(data2 < yref);
+            
+            positive_data = (data2(ypositive_indexes) - yref)*yincrement;
+            negative_data = (data2(ynegative_indexes) - yref)*yincrement;
+            
+            revived_sig(ypositive_indexes) = positive_data;
+            revived_sig(ynegative_indexes) = negative_data;
+
+
         end
 
 

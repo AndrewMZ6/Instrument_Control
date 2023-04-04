@@ -14,7 +14,7 @@ classdef DG
     methods (Static)
         function instr_object = connect_visadev(connectionID)
             instr_object = visadev(connectionID);
-            instr_object.Timeout = 5;
+            instr_object.Timeout = 10;
         end
 
         function instr_object = connect_visa(connectionID)
@@ -56,10 +56,13 @@ classdef DG
             device_buffer = 100000*8;
             set(instr_object,'OutputBufferSize',(device_buffer+125));
             fopen(instr_object);
+            
+            fprintf(instr_object, '*RST');
 
             fprintf(instr_object, [':DATA VOLATILE,', s_string]);
             fprintf(instr_object, '*WAI');
-            fprintf(instr_object, ':DIGI:RATE 40e6');
+            % fprintf(instr_object, ':DIGI:RATE 40e6');
+            fprintf(instr_object, ':FUNC:ARB:MODE PLAY');
 
             er = query(instr_object, 'SYST:ERR?');
             disp(['MY ERROR: ' , er]);
@@ -69,40 +72,25 @@ classdef DG
         end
 
 
-        function [instr_find_result] = get_voltage()
-            connectionID = 'USB0::0x1AB1::0x0640::DG5S244900056::0::INSTR';
-            instr_find_result = instrfind('Type', 'visa-usb', 'RsrcName', connectionID, 'Tag', '');
+        function load_data_visadev(connID, data)
 
-            disp('line 31:');
-            disp(instr_find_result);
-
-
-            if isempty(instr_find_result)
-                instr_object = visa('KEYSIGHT', connectionID);
-            else
-                fclose(instr_find_result);
-                instr_object = instr_find_result(1);
+            s_string = '';
+            for i = 1:length(data)
+                s_string = [s_string, ',', num2str(data(i))];
             end
 
-            disp('line 42:')
-            disp(instr_object);
 
+            instr_object = DG.connect_visadev(connID);
 
-            device_buffer = 100000*8;
-            set(instr_object,'OutputBufferSize',(device_buffer+125));
+            write(instr_object, '*RST');
+            write(instr_object, [':DATA VOLATILE,', s_string]);
+            write(instr_object, '*WAI');
+            write(instr_object, ':FUNC:ARB:MODE PLAY');
 
-            fopen(instr_object);
+            er = writeread(instr_object, 'SYST:ERR?');
+            disp(['MY ERROR: ' , er]);
+            write(instr_object, ':OUTPut ON');  
 
-
-            fprintf(instr_object, '*RST;*CLS');
-            disp('line 53:');
-            disp(instr_object);
-
-            fprintf(instr_object, '*IDN?');
-            disp('before closing: line 57');
-            r = fscanf(instr_object);
-            disp(r)
-            fclose(instr_object);
         end
     end
 end

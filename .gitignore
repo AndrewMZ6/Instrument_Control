@@ -1,6 +1,6 @@
-__pycache__/
 *.asv
 *.docx
 *.doc
 *.pyc
 *.tmp
+__pycache__/

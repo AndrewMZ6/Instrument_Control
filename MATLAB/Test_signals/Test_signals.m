@@ -46,7 +46,7 @@ classdef Test_signals
 
     end
 
-    function [sins, freqline] = two_sins()
+    function [sins, freqline] = normalized_two_sins()
         
         N = 10e3;
         fs = 20e6;
