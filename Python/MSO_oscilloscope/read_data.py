@@ -21,8 +21,8 @@ print(osci.query("*IDN?"))
 # osci.close()
 # sys.exit()
 
-#osci.write(':WAV:SOUR CHAN1');
-#osci.write(':WAV:MODE NORM');
+osci.write(':WAV:SOUR CHAN1');
+osci.write(':WAV:MODE NORM');
 
 osci.write(':WAV:FORM ASCii');
 

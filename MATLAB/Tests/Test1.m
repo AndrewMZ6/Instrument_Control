@@ -10,6 +10,8 @@ DG.load_data_visadev(connectionID, s);
 %% Oscilloscope and MSO file
 clc; close all; clearvars;
 
+
+
 d = MSO.get_data_normal('USB0::0x1AB1::0x0515::MS5A244909354::0::INSTR');
 
 
