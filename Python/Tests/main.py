@@ -27,8 +27,12 @@ pointsNum = 50e3
 
 dg.load_data(dg_connID, sig)
 
-data = mso.read_data_raw(mso_connID, pointsNum)
+data_raw = mso.read_data_raw(mso_connID, pointsNum)
 
 
 
-plt.plot(data)
+data_normal = mso.read_data_normal(mso_connID)
+
+
+
+plt.plot(data_raw)
