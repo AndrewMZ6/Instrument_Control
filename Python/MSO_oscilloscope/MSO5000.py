@@ -31,7 +31,7 @@ def read_data_raw(connID:str, pointsNum:int) -> np.ndarray:
     osci = rm.open_resource(connID)
     
        
-    osci.timeout = 5000
+    osci.timeout = 10000
     
     instr_name = osci.query('*IDN?')
     print(f'mso -> connected to {instr_name}')
@@ -57,7 +57,7 @@ def read_data_raw(connID:str, pointsNum:int) -> np.ndarray:
     
     
 
-    print(f'mso -> connection with {instr_name} closed')
+    print(f'mso -> connection closed')
     print(f'mso -> errors: {err}')
     
     
@@ -89,7 +89,7 @@ def read_data_normal(connID:str) -> np.ndarray:
     osci = rm.open_resource(connID)
     
        
-    osci.timeout = 5000
+    osci.timeout = 10000
     
     instr_name = osci.query('*IDN?')
     print(f'mso -> connected to {instr_name}')
@@ -112,7 +112,7 @@ def read_data_normal(connID:str) -> np.ndarray:
     osci.close()
     
     
-    print(f'mso -> connection with {instr_name} closed')
+    print(f'mso -> connection closed')
     print(f'mso -> errors: {err}')
     
     

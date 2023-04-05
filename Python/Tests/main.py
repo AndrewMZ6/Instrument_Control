@@ -16,16 +16,17 @@ import DG5000 as dg
 import MSO5000 as mso
 
 sig, f = ts.normalized_ofdm()
+sin = ts.normalized_two_sins()
 
 
 
 dg_connID = 'USB0::0x1AB1::0x0640::DG5S244900056::0::INSTR'
 mso_connID = 'USB0::0x1AB1::0x0515::MS5A244909354::0::INSTR'
-pointsNum = 50e3
+pointsNum = 500e3
 
 
 
-dg.load_data(dg_connID, sig)
+dg.load_data(dg_connID, sin)
 
 data_raw = mso.read_data_raw(mso_connID, pointsNum)
 

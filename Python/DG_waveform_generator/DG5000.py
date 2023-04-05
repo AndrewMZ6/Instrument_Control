@@ -16,7 +16,7 @@ def load_data(connID, data):
     
             
     gen = rm.open_resource(connID)
-    gen.timeout = 5000
+    gen.timeout = 10000
     
     instrument_name = gen.query("*IDN?")
     print(f'DG -> connected to {instrument_name}')
@@ -28,5 +28,5 @@ def load_data(connID, data):
     err = gen.query('SYST:ERR?')
     
     gen.close()
-    print(f'DG -> connection with {instrument_name} closed')
+    print(f'DG -> connection closed')
     print(f'DG -> errors: {err}')
