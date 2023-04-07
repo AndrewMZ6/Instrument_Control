@@ -29,7 +29,7 @@ classdef Test_signals
       sig_ofdm_shifted_time = ifft(sig_ofdm_shifted);
 
 
-      fs = 40e6;
+      fs = 25e6;
       fc = 10e6;
       t = 0:1/fs:(interpolated_size - 1)/fs;
 
@@ -49,7 +49,7 @@ classdef Test_signals
     function [sins, freqline] = normalized_two_sins()
         
         N = 10e3;
-        fs = 20e6;
+        fs = 25e6;
         fc1 = 5e4;
         fc2 = 10e4;
 

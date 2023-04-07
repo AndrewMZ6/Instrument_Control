@@ -73,7 +73,8 @@ classdef DG
 
 
         function load_data_visadev(connID, data)
-
+            
+            data = round(data, 5);
             s_string = '';
             for i = 1:length(data)
                 s_string = [s_string, ',', num2str(data(i))];
@@ -82,13 +83,16 @@ classdef DG
 
             instr_object = DG.connect_visadev(connID);
 
-            write(instr_object, '*RST');
+            instr_name = writeread(instr_object, '*IDN?');
+            disp(['dg -> connected to ', instr_name]);
+
+%             write(instr_object, '*RST');
             write(instr_object, [':DATA VOLATILE,', s_string]);
-            write(instr_object, '*WAI');
-            write(instr_object, ':FUNC:ARB:MODE PLAY');
+%             write(instr_object, '*WAI');
+%             write(instr_object, ':FUNC:ARB:MODE PLAY');
 
             er = writeread(instr_object, 'SYST:ERR?');
-            disp(['MY ERROR: ' , er]);
+            disp(['dg -> errors: ' , er]);
             write(instr_object, ':OUTPut ON');  
 
         end
