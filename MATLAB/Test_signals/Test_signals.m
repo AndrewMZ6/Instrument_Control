@@ -3,7 +3,7 @@ classdef Test_signals
   methods (Static)
 
     function [output_signal, freqline] = normalized_ofdm()
-    % Create normilized (in time domain) OFDM symbol with fs = 50e6, fc = 10e6, FFTSIZE = 1024
+    % Create normalized (in time domain) OFDM symbol with Fs = 25e6, Fc = 5e6, FFTSIZE = 1024
     % INTERPOLATION = 20, the output length = 1024*20
 
       guards = 100;
@@ -12,11 +12,6 @@ classdef Test_signals
       sig_ofdm = zeros(1, fft_size);
       sc_num = fft_size - guards*2;
 
-      % Octave:
-      %     randint(1, sc_num, [0, 15])
-      % Matlab:
-      %     randi([0, 15], 1, sc_num)
-      
       sig2 = qammod(randi([0, 15], 1, sc_num), 16);
 
       sig_ofdm(guards + 1:fft_size/2) = sig2(1:sc_num/2);
@@ -46,6 +41,7 @@ classdef Test_signals
 
     end
 
+ 
     function [sins, freqline] = normalized_two_sins()
         
         N = 10e3;
@@ -59,7 +55,7 @@ classdef Test_signals
         sin1 = sin(2*pi*fc1*timeline);
         sin2 = sin(2*pi*fc2*timeline);
         sins = sin1 + sin2;
-        sins = sins/max(sins);
+        sins = sins/max(abs(sins));
     end
   end
 end
