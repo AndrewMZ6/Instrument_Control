@@ -13,16 +13,26 @@ def process_data(data: np.ndarray, pre: list) -> np.ndarray:
     
     data = np.array(data, dtype=int)
 
+    # yincrement is the step value of oscilloscope voltage
     yincrement = pre[7]
+    
+    # yref is the middle line of the oscillogramm
     yref = int(pre[9])
     
+    # container for processed data
     revived_sig = np.zeros(len(data), dtype=float)
+    
+    # find values that are considered positive or negative in 
+    # regards to the reference value "yref"
     ypositive_indexes = np.where(data > yref)
     ynegative_indexes = np.where(data < yref)
     
+    
+    # make relative pos and neg data actualy pos and neg
     positive_data = (data[ypositive_indexes] - yref)*yincrement
     negative_data = (data[ynegative_indexes] - yref)*yincrement
     
+    # place the data in container
     revived_sig[ypositive_indexes] = positive_data
     revived_sig[ynegative_indexes] = negative_data
     

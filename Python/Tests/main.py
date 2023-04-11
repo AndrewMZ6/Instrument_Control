@@ -1,8 +1,6 @@
 import sys
 from pathlib import Path
 from matplotlib import pyplot as plt 
-from time import sleep
-
 
 
 # Path shenanigans
@@ -27,23 +25,23 @@ sig, f = ts.normalized_ofdm()
 sin = ts.normalized_two_sins()
 
 
-# set connection IDs
+# set connection IDs for digital generator (dg) and oscilloscope (mso)
 dg_connID = 'USB0::0x1AB1::0x0640::DG5S244900056::0::INSTR'
 mso_connID = 'USB0::0x1AB1::0x0515::MS5A244909354::0::INSTR'
 
 
-# loading data
-dg.load_data(dg_connID, sin)
+# load data to waveform generator
+dg.load_data(dg_connID, sig)
 
 
-# getting data from oscilloscope
+# acquire data from oscilloscope
 data_normal = mso.read_data_normal(mso_connID)
 data_raw = mso.read_data_raw(mso_connID, 500e3)
 data_max = mso.read_data_max(mso_connID)
 
 
 
-# plotting acquired data
+# plot acquired data
 fig1, ax1 = plt.subplots()
 fig2, ax2 = plt.subplots()
 fig3, ax3 = plt.subplots()

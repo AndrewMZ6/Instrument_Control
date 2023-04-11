@@ -59,6 +59,10 @@ classdef MSO
         function [processed_data, preambula_struct] = process_acquired_data(data, pre)
             
             preambula_struct = MSO.create_pre_struct(pre);
+
+            if (preambula_struct.points.value ~= length(data))
+                error('mso -> Read error: preambula.points != length(data)');
+            end
             
 
             yincrement = preambula_struct.yincrement.value;
@@ -89,29 +93,43 @@ classdef MSO
             instr_name = writeread(instr_object, '*IDN?');
             disp(['mso -> connected to ', instr_name]);
             
-            % set the acquirance regime
-            write(instr_object, ':STOP');
-            write(instr_object, ':WAV:SOUR CHAN1');
+            read_success_flag = 0;
 
-            write(instr_object, ':WAV:MODE NORMal');
-            write(instr_object, ':WAV:FORM BYTE');
+            while ~read_success_flag
             
-            % acquire preambula
-            pre = writeread(instr_object, ':WAV:PRE?');
-           
-            % acquire data
-            write(instr_object, ':WAV:DATA?');
-            write(instr_object, '*WAI');
-            data = readbinblock(instr_object, 'uint8');
-            
-            % check for system errors
-            errs = writeread(instr_object, ':SYST:ERR?');
-            write(instr_object, ':RUN');
-            
-            disp(['mso -> errors: ' , errs]);
-            
+                try
+                    % set the acquirance regime
+                    write(instr_object, ':STOP');
+                    write(instr_object, ':WAV:SOUR CHAN1');
+        
+                    write(instr_object, ':WAV:MODE NORMal');
+                    write(instr_object, ':WAV:FORM BYTE');
+                    
+                    % acquire preambula
+                    pre = writeread(instr_object, ':WAV:PRE?');
+                   
+                    % acquire data
+                    write(instr_object, ':WAV:DATA?');
+                    write(instr_object, '*WAI');
+                    data = readbinblock(instr_object, 'uint8');
+                    
+                    % check for system errors
+                    errs = writeread(instr_object, ':SYST:ERR?');
+                    write(instr_object, ':RUN');
+                    
+                    disp(['mso -> errors: ' , errs]);
+                    
+        
+                    [revived_sig, preambula] = MSO.process_acquired_data(data, pre);
 
-            [revived_sig, preambula] = MSO.process_acquired_data(data, pre);
+                    read_success_flag = 1;
+                catch err
+
+                    disp(err.message);
+                    pause(1);
+                end
+
+            end
 
 
         end
@@ -125,65 +143,163 @@ classdef MSO
             
             instr_name = writeread(instr_object, '*IDN?');
             disp(['mso -> connected to ', instr_name]);
-            
-            % set the acquirance regime
-            write(instr_object, ':STOP');
-            write(instr_object, ':WAV:SOUR CHAN1');
 
-            write(instr_object, ':WAV:MODE RAW');
-            write(instr_object, ':WAV:FORM BYTE');
-            write(instr_object, [':WAV:POINts ', num2str(points)]);
+
+            read_success_flag = 0;
+
+            while ~read_success_flag
             
-            % acquire preambula
-            pre = writeread(instr_object, ':WAV:PRE?');
+                try
             
-            % acquire data
-            write(instr_object, ':WAV:DATA?');
-            write(instr_object, '*WAI');
-            data = readbinblock(instr_object, 'uint8');
-            
-            % check for system errors
-            errs = writeread(instr_object, ':SYST:ERR?');
-            write(instr_object, ':RUN');
-            
-            disp(['mso -> errors: ' , errs]);
-            
-            [revived_sig, preambula] = MSO.process_acquired_data(data, pre);
+                    % set the acquirance regime
+                    write(instr_object, ':STOP');
+                    write(instr_object, ':WAV:SOUR CHAN1');
+        
+                    write(instr_object, ':WAV:MODE RAW');
+                    write(instr_object, ':WAV:FORM BYTE');
+                    write(instr_object, [':WAV:POINts ', num2str(points)]);
+                    
+                    % acquire preambula
+                    pre = writeread(instr_object, ':WAV:PRE?');
+                    
+                    % acquire data
+                    write(instr_object, ':WAV:DATA?');
+                    write(instr_object, '*WAI');
+                    data = readbinblock(instr_object, 'uint8');
+                    
+                    % check for system errors
+                    errs = writeread(instr_object, ':SYST:ERR?');
+                    write(instr_object, ':RUN');
+                    
+                    disp(['mso -> errors: ' , errs]);
+                    
+                    [revived_sig, preambula] = MSO.process_acquired_data(data, pre);
+                    read_success_flag = 1;
+                catch err
+
+                    disp(err.message);
+                    pause(1);
+                end
+
+            end
 
 
         end
 
         function [revived_sig, preambula] = read_data_max(connectionID)
 
-
+            
+            
             % connect to the instrument
             instr_object = MSO.connect_visadev(connectionID);
             
             instr_name = writeread(instr_object, '*IDN?');
             disp(['mso -> connected to ', instr_name]);
+
+
+            read_success_flag = 0;
+
+            while ~read_success_flag
             
-            % set the acquirance regime
-            write(instr_object, ':STOP');
-            write(instr_object, ':WAV:SOUR CHAN1');
+                try
+            
+                    % set the acquirance regime
+                    write(instr_object, ':STOP');
+                    write(instr_object, ':WAV:SOUR CHAN1');
+        
+
+                    MSO.setup_max(instr_object);
+%                     write(instr_object, ':WAV:MODE MAX');
+%                     write(instr_object, ':WAV:FORM BYTE');
+                    
+                    % acquire preambula
+                    pre = writeread(instr_object, ':WAV:PRE?');
+                    
+                    % acquire data
+                    write(instr_object, ':WAV:DATA?');
+                    write(instr_object, '*WAI');
+                    data = readbinblock(instr_object, 'uint8');
+        
+                    
+                    % check for system errors
+                    errs = writeread(instr_object, ':SYST:ERR?');
+                    write(instr_object, ':RUN');
+                    
+                    disp(['mso -> errors: ' , errs]);
+                    
+                    [revived_sig, preambula] = MSO.process_acquired_data(data, pre);
+
+                    read_success_flag = 1;
+                catch err
+
+                    disp(err.message);
+                    pause(1);
+                end
+
+            end
+
+
+        end
+
+
+
+        function setup_max(instr_object)
 
             write(instr_object, ':WAV:MODE MAX');
             write(instr_object, ':WAV:FORM BYTE');
+
+        end
+
+
+        function read_data(connectionID, setup_function)
             
-            % acquire preambula
-            pre = writeread(instr_object, ':WAV:PRE?');
+            % connect to the instrument
+            instr_object = MSO.connect_visadev(connectionID);
             
-            % acquire data
-            write(instr_object, ':WAV:DATA?');
-            write(instr_object, '*WAI');
-            data = readbinblock(instr_object, 'uint8');
+            instr_name = writeread(instr_object, '*IDN?');
+            disp(['mso -> connected to ', instr_name]);
+
+
+            read_success_flag = 0;
+
+            while ~read_success_flag
             
-            % check for system errors
-            errs = writeread(instr_object, ':SYST:ERR?');
-            write(instr_object, ':RUN');
+                try
             
-            disp(['mso -> errors: ' , errs]);
-            
-            [revived_sig, preambula] = MSO.process_acquired_data(data, pre);
+                    % set the acquirance regime
+                    write(instr_object, ':STOP');
+                    write(instr_object, ':WAV:SOUR CHAN1');
+        
+
+                    MSO.setup_max(instr_object);
+%                     write(instr_object, ':WAV:MODE MAX');
+%                     write(instr_object, ':WAV:FORM BYTE');
+                    
+                    % acquire preambula
+                    pre = writeread(instr_object, ':WAV:PRE?');
+                    
+                    % acquire data
+                    write(instr_object, ':WAV:DATA?');
+                    write(instr_object, '*WAI');
+                    data = readbinblock(instr_object, 'uint8');
+        
+                    
+                    % check for system errors
+                    errs = writeread(instr_object, ':SYST:ERR?');
+                    write(instr_object, ':RUN');
+                    
+                    disp(['mso -> errors: ' , errs]);
+                    
+                    [revived_sig, preambula] = MSO.process_acquired_data(data, pre);
+
+                    read_success_flag = 1;
+                catch err
+
+                    disp(err.message);
+                    pause(1);
+                end
+
+            end
 
 
         end
