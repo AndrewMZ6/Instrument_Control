@@ -23,14 +23,22 @@ DG.load_data(dg_conn_ID, data_to_load);
 clc; close all; clearvars;
 osci_conn_ID = 'USB0::0x1AB1::0x0515::MS5A244909354::0::INSTR';
 
+channel_num = 3;
+
+
 % read data in normal mode. The mode allows max of 1000 points to load
-[d, p] = MSO.read_data_normal(osci_conn_ID);
+[d, p] = MSO.read_data_normal(osci_conn_ID, channel_num);
 
 % read data in raw mode. The mode allows max of internal instrument memory depth points to load
-[d_raw, p_raw] = MSO.read_data_raw(osci_conn_ID, 1e6);
+[d_raw, p_raw] = MSO.read_data_raw(osci_conn_ID, channel_num, 100e3);
 
 
-[d_max, p_max] = MSO.read_data_max(osci_conn_ID);
+[d_max, p_max] = MSO.read_data_max(osci_conn_ID, channel_num);
+
+
+disp(d(1:5));
+disp(d_raw(1:5));
+disp(d_max(1:5));
 
 
 figure; 
@@ -64,7 +72,7 @@ figure;
 %     plot(abs(fft(d_max))); 
 %     grid on;
 %     title('spectrum of max data');
-
+return 
 
 %%  Testing function as argument
 clearvars; close all; clc;

@@ -7,9 +7,6 @@ classdef MSO
     %   upload data to generator and send it to chosen channel. Set sample
     %   frequency
     
-    properties
-        Property1
-    end
     
     methods (Static)
         function instr_object = connect_visadev(connectionID)
@@ -83,9 +80,10 @@ classdef MSO
             % place the data in container
             processed_data(ypositive_indexes) = positive_data;
             processed_data(ynegative_indexes) = negative_data;
+
         end
 
-        function [revived_sig, preambula] = read_data_normal(connectionID)
+        function [revived_sig, preambula] = read_data_normal(connectionID, ch_num)
 
             % connect to the instrument
             instr_object = MSO.connect_visadev(connectionID);
@@ -100,7 +98,7 @@ classdef MSO
                 try
                     % set the acquirance regime
                     write(instr_object, ':STOP');
-                    write(instr_object, ':WAV:SOUR CHAN1');
+                    write(instr_object, [':WAV:SOUR CHAN', num2str(ch_num)]);
         
                     write(instr_object, ':WAV:MODE NORMal');
                     write(instr_object, ':WAV:FORM BYTE');
@@ -125,8 +123,8 @@ classdef MSO
                     read_success_flag = 1;
                 catch err
 
-                    disp(err.message);
-                    pause(1);
+                    disp(['catched error read_data_normal: ', err.message]);
+
                 end
 
             end
@@ -135,7 +133,7 @@ classdef MSO
         end
 
 
-        function [revived_sig, preambula] = read_data_raw(connectionID, points)
+        function [revived_sig, preambula] = read_data_raw(connectionID, ch_num, points)
 
 
             % connect to the instrument
@@ -153,7 +151,7 @@ classdef MSO
             
                     % set the acquirance regime
                     write(instr_object, ':STOP');
-                    write(instr_object, ':WAV:SOUR CHAN1');
+                    write(instr_object, [':WAV:SOUR CHAN', num2str(ch_num)]);
         
                     write(instr_object, ':WAV:MODE RAW');
                     write(instr_object, ':WAV:FORM BYTE');
@@ -175,10 +173,11 @@ classdef MSO
                     
                     [revived_sig, preambula] = MSO.process_acquired_data(data, pre);
                     read_success_flag = 1;
+
                 catch err
 
-                    disp(err.message);
-                    pause(1);
+                    disp(['catched error read_data_raw: ', err.message]);
+
                 end
 
             end
@@ -186,7 +185,7 @@ classdef MSO
 
         end
 
-        function [revived_sig, preambula] = read_data_max(connectionID)
+        function [revived_sig, preambula] = read_data_max(connectionID, ch_num)
 
             
             
@@ -205,12 +204,10 @@ classdef MSO
             
                     % set the acquirance regime
                     write(instr_object, ':STOP');
-                    write(instr_object, ':WAV:SOUR CHAN1');
+                    write(instr_object, [':WAV:SOUR CHAN', num2str(ch_num)]);
         
-
-                    MSO.setup_max(instr_object);
-%                     write(instr_object, ':WAV:MODE MAX');
-%                     write(instr_object, ':WAV:FORM BYTE');
+                    write(instr_object, ':WAV:MODE MAX');
+                    write(instr_object, ':WAV:FORM BYTE');
                     
                     % acquire preambula
                     pre = writeread(instr_object, ':WAV:PRE?');
@@ -225,15 +222,17 @@ classdef MSO
                     errs = writeread(instr_object, ':SYST:ERR?');
                     write(instr_object, ':RUN');
                     
+                    % display system errors
                     disp(['mso -> errors: ' , errs]);
                     
                     [revived_sig, preambula] = MSO.process_acquired_data(data, pre);
 
                     read_success_flag = 1;
+
                 catch err
 
-                    disp(err.message);
-                    pause(1);
+                    disp(['catched error in read_data_max: ', err.message]);
+
                 end
 
             end
@@ -241,67 +240,5 @@ classdef MSO
 
         end
 
-
-
-        function setup_max(instr_object)
-
-            write(instr_object, ':WAV:MODE MAX');
-            write(instr_object, ':WAV:FORM BYTE');
-
-        end
-
-
-        function read_data(connectionID, setup_function)
-            
-            % connect to the instrument
-            instr_object = MSO.connect_visadev(connectionID);
-            
-            instr_name = writeread(instr_object, '*IDN?');
-            disp(['mso -> connected to ', instr_name]);
-
-
-            read_success_flag = 0;
-
-            while ~read_success_flag
-            
-                try
-            
-                    % set the acquirance regime
-                    write(instr_object, ':STOP');
-                    write(instr_object, ':WAV:SOUR CHAN1');
-        
-
-                    MSO.setup_max(instr_object);
-%                     write(instr_object, ':WAV:MODE MAX');
-%                     write(instr_object, ':WAV:FORM BYTE');
-                    
-                    % acquire preambula
-                    pre = writeread(instr_object, ':WAV:PRE?');
-                    
-                    % acquire data
-                    write(instr_object, ':WAV:DATA?');
-                    write(instr_object, '*WAI');
-                    data = readbinblock(instr_object, 'uint8');
-        
-                    
-                    % check for system errors
-                    errs = writeread(instr_object, ':SYST:ERR?');
-                    write(instr_object, ':RUN');
-                    
-                    disp(['mso -> errors: ' , errs]);
-                    
-                    [revived_sig, preambula] = MSO.process_acquired_data(data, pre);
-
-                    read_success_flag = 1;
-                catch err
-
-                    disp(err.message);
-                    pause(1);
-                end
-
-            end
-
-
-        end
     end
 end

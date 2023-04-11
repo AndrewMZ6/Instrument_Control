@@ -31,13 +31,13 @@ mso_connID = 'USB0::0x1AB1::0x0515::MS5A244909354::0::INSTR'
 
 
 # load data to waveform generator
-dg.load_data(dg_connID, sig)
+dg.load_data(dg_connID, sin)
 
 
 # acquire data from oscilloscope
-data_normal = mso.read_data_normal(mso_connID)
-data_raw = mso.read_data_raw(mso_connID, 500e3)
-data_max = mso.read_data_max(mso_connID)
+data_normal, pre_norm = mso.read_data_normal(mso_connID, 3)
+data_raw, pre_raw = mso.read_data_raw(mso_connID, 100e3, 3)
+data_max, pre_max = mso.read_data_max(mso_connID, 3)
 
 
 
