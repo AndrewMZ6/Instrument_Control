@@ -12,6 +12,17 @@ classdef WG
     end
     
     methods (Static)
+        function instr_obj = visadev_connect(connectionID)
+            instr_obj = visadev(connectionID);
+        end
+
+        function set_freq(connectionID, freq)
+            instr_obj = WG.visadev_connect(connectionID);
+            chNum = 1;
+            command = [':SOURce', num2str(chNum), ':FREQuency ', num2str(freq)];
+            write(instr_obj, command);
+        end
+
         function channel_amp(connectionID, chNum, amp)
             
             % Функция отвечающая за установку амплитуды канала 1 и 2 на генераторе

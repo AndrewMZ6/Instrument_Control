@@ -75,8 +75,8 @@ class Test_signals:
         
 		N = 10000
 		fs = 25e6
-		fc1 = 5e4
-		fc2 = 10e4
+		fc1 = 50e3
+		fc2 = 100e3
 		timeline = np.linspace(0, N/fs, N)
         
 		sin1 = np.sin(2*np.pi*fc1*timeline)
@@ -88,7 +88,22 @@ class Test_signals:
 		sin_sum /= np.max(np.abs(sin_sum))
         
 		return sin_sum
+    
         
+	def normalized_sin():
+        
+		N = 10000
+		fs = 25e6
+		fc1 = 100e3
+		timeline = np.linspace(0, N/fs, N)
+        
+		sin1 = np.sin(2*np.pi*fc1*timeline)
+		        
+        
+        # normalize 
+		sin1 /= np.max(np.abs(sin1))
+        
+		return sin1
 
 
 if __name__ == '__main__':

@@ -7,6 +7,34 @@ classdef DSOX
     end
     
     methods (Static)
+        function instr_obj = visadev_connect(connectionID)
+            instr_obj = visadev(connectionID);
+        end
+
+        function rms = get_rms(connectionID, chNum)
+            instr_obj = DSOX.visadev_connect(connectionID);            
+            command = [':MEASure:VRMS? DISPlay,AC,CHANnel', num2str(chNum)];
+            rms = writeread(instr_obj, command);
+        end
+
+        function delay = get_delay(connectionID)
+            instr_obj = DSOX.visadev_connect(connectionID);
+            command = ':MEASure:DELay? CHANnel1,CHANnel2';
+            delay = writeread(instr_obj, command);
+        end
+
+        function phase = get_phase(connectionID)
+            instr_obj = DSOX.visadev_connect(connectionID);
+            command = ':MEASure:PHASe? CHANnel1,CHANnel2';
+            phase = writeread(instr_obj, command);
+        end
+
+
+        function set_razvertka(connectionID, tb)
+            instr_obj = DSOX.visadev_connect(connectionID);            
+            command = [':TIMebase:RANGe ', num2str(tb)];
+            write(instr_obj, command);
+        end
 
         function vmax = get_vmax(connID, chNum)
             if strcmpi(connID, 'default')

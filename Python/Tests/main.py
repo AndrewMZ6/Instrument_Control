@@ -22,7 +22,8 @@ from Test_signals import Test_signals as ts
 
 # creating signal to load to waveform generator
 sig, f = ts.normalized_ofdm()
-sin = ts.normalized_two_sins()
+sin_sig = ts.normalized_two_sins()
+sin_sig_1 = ts.normalized_sin()
 
 
 # set connection IDs for digital generator (dg) and oscilloscope (mso)
@@ -31,8 +32,9 @@ mso_connID = 'USB0::0x1AB1::0x0515::MS5A244909354::0::INSTR'
 
 
 # load data to waveform generator
-dg.load_data(dg_connID, sin)
+dg.load_data(dg_connID, sin_sig_1)
 
+sys.exit()
 
 # acquire data from oscilloscope
 data_normal, pre_norm = mso.read_data_normal(mso_connID, 3)

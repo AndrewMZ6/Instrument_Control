@@ -15,6 +15,8 @@ def load_data(connID, data):
     print(f'DG -> connected to {instrument_name}')
     
     gen.write(message)
+    gen.write('*WAI')
+    gen.write(':DATA:POIN:INT OFF')
     
     
     gen.write(':OUTPut ON')

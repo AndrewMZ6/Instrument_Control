@@ -46,8 +46,8 @@ classdef Test_signals
         
         N = 10e3;
         fs = 25e6;
-        fc1 = 5e4;
-        fc2 = 10e4;
+        fc1 = 50e3;
+        fc2 = 100e3;
 
         freqline = 0:fs/N:fs - 1;
 
@@ -57,5 +57,23 @@ classdef Test_signals
         sins = sin1 + sin2;
         sins = sins/max(abs(sins));
     end
+
+    function [single_sin, freqline, timeline] = normalized_sin()
+        
+        N = 10e3;
+        fs = 25e6;
+        fc1 = 100e3;
+        
+        freqline = 0:fs/N:fs - 1;
+
+        timeline = 0:1/fs:(N -1)/fs;
+        single_sin = sin(2*pi*fc1*timeline);
+        
+        single_sin = single_sin/max(abs(single_sin));
+%         single_sin(end) = 1;
+%         single_sin(1) = 1;
+    end
+
+
   end
 end

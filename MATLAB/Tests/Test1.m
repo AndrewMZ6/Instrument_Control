@@ -1,17 +1,23 @@
 clc; close all; clearvars;
-addpath('..\Test_signals\', '..\DG_waveform_generator\', '..\MSO_oscilloscope\');
+addpath('..\Test_signals\', '..\DG_waveform_generator\', '..\MSO_oscilloscope\', '..\TF_waveform_generator');
 
 % Create data to load. Currently there are two signals available in
 % Test_signals class:
 %       normalized_two_sins
 %       normalized_ofdm
-% data_to_load = Test_signals.normalized_ofdm;
-data_to_load = Test_signals.normalized_two_sins;
+[data_to_load, freq] = Test_signals.normalized_ofdm;
+% data_to_load = Test_signals.normalized_two_sins;
 
 [sins, f] = Test_signals.normalized_two_sins();
 figure;
-plot(sins)
+plot(f, abs(fft(sins)));
 grid on;
+
+
+figure;
+plot(freq, abs(fft(data_to_load)));
+grid on;
+
 
 dg_conn_ID = 'USB0::0x1AB1::0x0640::DG5S244900056::0::INSTR';
 
@@ -20,7 +26,7 @@ DG.load_data(dg_conn_ID, data_to_load);
 
 
 %% Oscilloscope and MSO file
-clc; close all; clearvars;
+% clc; close all; clearvars;
 osci_conn_ID = 'USB0::0x1AB1::0x0515::MS5A244909354::0::INSTR';
 
 channel_num = 3;
@@ -72,27 +78,93 @@ figure;
 %     plot(abs(fft(d_max))); 
 %     grid on;
 %     title('spectrum of max data');
+
+
+figure; plot(abs(xcorr(sins, d_raw)));
+
+
 return 
 
 %%  Testing function as argument
-clearvars; close all; clc;
+% clearvars; close all; clc;
+% 
+% 
+% 
+% r = Test2(@my_mult, 10, 10);
+% 
+% 
+% 
+% 
+% function result = my_sum(x, y)
+% 
+%     result = x + y;
+% 
+% end
+% 
+% 
+% function result = my_mult(x, y)
+% 
+%     result = x*y;
+% 
+% end
 
 
 
-r = Test2(@my_mult, 10, 10);
+
+
+%% TF WG test
 
 
 
+clc; close all; clearvars;
+% data_to_load = Test_signals.normalized_sin;
 
-function result = my_sum(x, y)
+[sins, f, t] = Test_signals.normalized_sin();
+figure;
+plot(sins,'-');
+grid on;
 
-    result = x + y;
 
+% load data
+connectionID = 'USB0::0x0957::0x2807::MY57401329::0::INSTR';
+data = sins;
+chNum = 1;
+fs = 31.25e6;
+ArbFileName = 'LOL';
+WG.load_data(connectionID, data, chNum, fs, ArbFileName)
+
+
+figure;
+plot(f, abs(fft(sins)));
+grid on;
+
+
+
+%% single sine test
+
+clc; close all; clearvars;
+
+
+[sins, f] = Test_signals.normalized_sin();
+figure;
+plot(sins);
+grid on;
+
+
+data = sins/2;
+dg_conn_ID = 'USB0::0x1AB1::0x0640::DG5S244900056::0::INSTR';
+
+
+% load data
+DG.load_data(dg_conn_ID, data);
+
+
+s_string = '';
+
+for i = 1:length(data)
+    s_string = [s_string, ',', num2str(data(i))];
 end
 
-
-function result = my_mult(x, y)
-
-    result = x*y;
-
-end
+a = fopen("sig2.txt");
+fwrite(a, "s_string");
+fclose(a);
