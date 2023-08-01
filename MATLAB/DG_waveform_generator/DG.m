@@ -45,6 +45,7 @@ classdef DG
             disp(['dg -> connected to ', instr_name]);
 
             write(instr_object, ':DATA:POIN:INT OFF');
+%             write(instr_object, ':DATA:POINts VOLATILE,30000');
             interp_value = writeread(instr_object, ':DATA:POIN:INT?');
             disp(['before load: ', interp_value]);
             write(instr_object, [':DATA VOLATILE,', s_string]);
@@ -56,6 +57,10 @@ classdef DG
             er = writeread(instr_object, 'SYST:ERR?');
             disp(['dg -> errors: ' , er]);
             write(instr_object, ':OUTPut ON');  
+
+
+            pts = writeread(instr_object, ':DATA:POINts? VOLATILE');
+            disp(['points? = ', num2str(pts)]);
 
         end
 
