@@ -25,18 +25,22 @@ classdef DG
         end
 
         function load_data(connID, data)
+
+
+            L = 16383;
+            zeros_length = L - length(data);
+            zeros_arr = zeros(1, zeros_length);
+            singnal_with_zeros = [data, zeros_arr];
             
             % normalize if data abolute
-            data_max = max(abs(data));
+            data_max = max(abs(singnal_with_zeros));
 
             if data_max > 1
-                data = data/data_max;
+                singnal_with_zeros = singnal_with_zeros/data_max;
             end
 
-            data = round(data, 4);
 
-            s_string = DG.stringify(data);
-            disp(['data length = ', num2str(length(s_string))]);
+            s_string = DG.stringify(singnal_with_zeros);
 
             instr_object = DG.connect_visadev(connID);
             
@@ -44,16 +48,19 @@ classdef DG
             instr_name = writeread(instr_object, '*IDN?');
             disp(['dg -> connected to ', instr_name]);
 
-            write(instr_object, ':DATA:POIN:INT OFF');
-%             write(instr_object, ':DATA:POINts VOLATILE,30000');
             interp_value = writeread(instr_object, ':DATA:POIN:INT?');
             disp(['before load: ', interp_value]);
-            write(instr_object, [':DATA VOLATILE,', s_string]);
-%             writebinblock(instr_object, data, "double");
-            write(instr_object, ':DATA:POIN:INT OFF');
+%             write(instr_object, ':DATA:POIN:INT OFF');
 
             interp_value = writeread(instr_object, ':DATA:POIN:INT?');
-            disp(['after load: ', interp_value]);
+            disp(['before load: ', interp_value]);
+            
+            write(instr_object, ':VOLTage 0.5');
+            write(instr_object, ':FUNCtion:ARB:MODE PLAY');
+            write(instr_object, ':FUNCtion:ARB:SAMPLE 3');
+%             write(instr_object, ':DATA:POIN:INT OFF');
+
+            write(instr_object, [':DATA VOLATILE,', s_string]);
             er = writeread(instr_object, 'SYST:ERR?');
             disp(['dg -> errors: ' , er]);
             write(instr_object, ':OUTPut ON');  
