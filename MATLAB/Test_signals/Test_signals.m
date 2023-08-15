@@ -1,5 +1,10 @@
 classdef Test_signals
 
+  properties (Constant)
+
+    x = 10;
+  end
+
   methods (Static)
 
       function output = normalized_ofdm(fft_size, interpolated_size, guards_size, fc, fs, M)
@@ -21,6 +26,7 @@ classdef Test_signals
             
     
           sig2 = qammod(bits.', MORDER, 'InputType','bit');
+
     
     
           sig_ofdm(guards + 1:fft_size/2) = sig2(1:sc_num/2);
@@ -61,6 +67,7 @@ classdef Test_signals
           output.bits = bits;
           output.sig_ofdm = sig_ofdm_shifted;
           output.modulated_bits = sig2;
+          output.modulation_order = M;
 
     end
 
@@ -95,7 +102,7 @@ classdef Test_signals
     end
     
 
-    function output_data = process_ofdm(rx_signal, tx_signal)
+    function output_data = process_ofdm(rx_signal, tx_signal, M)
         
         % signal - struct containing the following fields:
         %   signal.data - real valued (not complex) passband ofdm signal
@@ -127,19 +134,19 @@ classdef Test_signals
 
 
         output_data.modulated_data = modulated_data;
-        output_data.bits = Test_signals.demodulate_ofdm_data(modulated_data, 16);
+        output_data.bits = Test_signals.demodulate_ofdm_data(modulated_data, M);
 
     end
     
     function bits = demodulate_ofdm_data(modulated_data, M)
 
         std(modulated_data)
+        disp(['prop = ', num2str(Test_signals.x)])
         
         normalized_data = (modulated_data./std(modulated_data));
-        scatterplot(normalized_data)
-            title('Normalized data');
-
-        bits = qamdemod(3*normalized_data.', M, 'OutputType','bit').';
+        normalization_factor = sqrt(M) - 1;
+        
+        bits = qamdemod(normalization_factor*normalized_data.', M, 'OutputType','bit').';
     end
 
 

@@ -89,12 +89,14 @@ clc; close all; clearvars;
 addpath('..\Test_signals\', '..\DG_waveform_generator\', '..\MSO_oscilloscope\', '..\TF_waveform_generator');
 
 % signal = Test_signals.normalized_sin();
-signal = Test_signals.normalized_ofdm(1024, 12800, 100, 15e6, 125e6, 16);
+signal = Test_signals.normalized_ofdm(1024, 12800, 100, 15e6, 125e6, 128);
 
 figure;
     plot(signal.freqline, abs(fft(signal.data)));
     grid on;
     title('Generated signal');
+
+
 
 dg_conn_ID = 'USB0::0x1AB1::0x0640::DG5S244900056::0::INSTR';
 data_to_load = signal.data;
@@ -121,10 +123,12 @@ channel_num = 2;
 
 
 
-s = Test_signals.process_ofdm(d_max, signal.data);
+s = Test_signals.process_ofdm(d_max, signal.data, signal.modulation_order);
+scatterplot(s.modulated_data)
 
-
-er = biterr(signal.bits, s.bits)
+[er, errate] = biterr(signal.bits, s.bits);
+er 
+errate
 
 return
 
