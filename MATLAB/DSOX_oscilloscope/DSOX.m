@@ -17,6 +17,13 @@ classdef DSOX
             rms = writeread(instr_obj, command);
         end
 
+        function rms = get_voltage_DC(connectionID, chNum)
+            instr_obj = DSOX.visadev_connect(connectionID);            
+            command = [':MEASure:VAVerage? DISPlay,CHANnel', num2str(chNum)];
+            rms = writeread(instr_obj, command);
+            rms = str2num(rms);
+        end
+
         function delay = get_delay(connectionID)
             instr_obj = DSOX.visadev_connect(connectionID);
             command = ':MEASure:DELay? CHANnel1,CHANnel2';

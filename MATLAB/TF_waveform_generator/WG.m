@@ -16,6 +16,22 @@ classdef WG
             instr_obj = visadev(connectionID);
         end
 
+        function turn_on_DC(connectionID)
+            instr_obj = WG.visadev_connect(connectionID);
+            command = 'FUNCtion DC';
+            write(instr_obj, command);
+
+            command = 'OUTput ON';
+            write(instr_obj, command);
+        end
+
+        function set_DC_voltage(connectionID, voltage)
+            instr_obj = WG.visadev_connect(connectionID);
+
+            command = ['VOLTage:OFFset ', num2str(voltage)];
+            write(instr_obj, command);
+        end
+
         function set_freq(connectionID, freq)
             instr_obj = WG.visadev_connect(connectionID);
             chNum = 1;
@@ -149,8 +165,7 @@ classdef WG
             % Задание частоты дискретизации
             sRate = fs;
             % Задание величины амлитуды
-            amp = 0.1;
-            
+            amp = 700e-3;
             % ловушка ошибок
             
             errorstr = writeread(WG_obj, 'SYST:ERR?');
@@ -185,6 +200,7 @@ classdef WG
             disp(errorstr);
             
             if ischar(data)
+                disp('ISCHAR')
                 % Обновляем окно загрузки
                 waitbar(.8,h,mes);
                 
@@ -202,7 +218,7 @@ classdef WG
                 waitbar(0.9, h, mes);
                 
                 % установка размаха шума по амплитуде
-                command = ['SOURCE', num2str(chNum), ':VOLT 100e-3'];
+                command = ['SOURCE', num2str(chNum), ':VOLT 2'];
                 % Выполнить команду
                 write(WG_obj, command);
                 
@@ -215,6 +231,7 @@ classdef WG
             else
                 % Некоторые версии Matlab требую double
                 data = single(data);
+                disp('NO ISCHAR')
             
                 % Размещаем данные между 1 и -1
                 mx = max(abs(data));
