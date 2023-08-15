@@ -2,7 +2,7 @@ import pyvisa
 
 def load_data(connID, data):
 
-    data_as_string = ','.join(list(map(lambda r: str(round(r, ndigits=5)), data)))
+    data_as_string = ','.join(list(map(lambda r: str(round(r, ndigits=4)), data)))
     message = f':DATA VOLATILE,{data_as_string}'
     
     rm = pyvisa.ResourceManager()
@@ -13,10 +13,15 @@ def load_data(connID, data):
     
     instrument_name = gen.query("*IDN?")
     print(f'DG -> connected to {instrument_name}')
+
+    gen.write(':DATA:POIN:INT OFF')
+    gen.write(':VOLTage 0.5')
+    gen.write(':FUNCtion:ARB:MODE PLAY')
+    gen.write(':FUNCtion:ARB:SAMPLE 7')
     
     gen.write(message)
     gen.write('*WAI')
-    gen.write(':DATA:POIN:INT OFF')
+    
     
     
     gen.write(':OUTPut ON')
