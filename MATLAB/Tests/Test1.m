@@ -89,7 +89,7 @@ clc; close all; clearvars;
 addpath('..\Test_signals\', '..\DG_waveform_generator\', '..\MSO_oscilloscope\', '..\TF_waveform_generator');
 
 % signal = Test_signals.normalized_sin();
-signal = Test_signals.normalized_ofdm(1024, 12800, 100, 15e6, 125e6, 128);
+signal = Test_signals.normalized_ofdm(1024, 12800, 100, 15e6, 125e6, 16);
 
 figure;
     plot(signal.freqline, abs(fft(signal.data)));
@@ -103,7 +103,9 @@ data_to_load = signal.data;
 
 
 % load data
-DG.load_data(dg_conn_ID, data_to_load);
+fs = 125e6;
+amp = .7;
+DG.load_data(dg_conn_ID, data_to_load, fs, amp);
 
 
 
@@ -117,14 +119,12 @@ channel_num = 2;
 
 % read data in raw mode. The mode allows max of internal instrument memory depth points to load
 [~] = MSO.read_data_raw(osci_conn_ID, channel_num, 100e3);
-
-
 [d_max, p_max] = MSO.read_data_max(osci_conn_ID, channel_num);
 
-
-
 s = Test_signals.process_ofdm(d_max, signal.data, signal.modulation_order);
-scatterplot(s.modulated_data)
+
+scatterplot(s.modulated_data);
+    grid on;
 
 [er, errate] = biterr(signal.bits, s.bits);
 er 
@@ -166,6 +166,7 @@ figure;
     plot(abs((cut_restored)));
     
 scatterplot(cut_restored);
+    grid on;
 
 
 

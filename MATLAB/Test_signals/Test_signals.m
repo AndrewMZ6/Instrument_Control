@@ -126,16 +126,14 @@ classdef Test_signals
         start1 = lags(max_idx1);
         cut_rx_signal = rx_signal(start1 + 1:start1 + length(tx_signal));
 
+%         modulated_data = Test_signals.to_baseband(cut_rx_signal, fc, fs);
+
         spec1 = fft(cut_rx_signal);
         modulated_data = [spec1(1537 - 412:1536), spec1(1538:1537 + 412)];
 
 
-        
-
-
         output_data.modulated_data = modulated_data;
         output_data.bits = Test_signals.demodulate_ofdm_data(modulated_data, M);
-
     end
     
     function bits = demodulate_ofdm_data(modulated_data, M)
@@ -145,8 +143,40 @@ classdef Test_signals
         
         normalized_data = (modulated_data./std(modulated_data));
         normalization_factor = sqrt(M) - 1;
-        
+
         bits = qamdemod(normalization_factor*normalized_data.', M, 'OutputType','bit').';
+    end
+
+
+    function x = to_baseband(cut_rx_signal, fc, fs)
+
+        fs = fs;
+        Ts = 1/fs;
+        fc = fc;
+        t = 0:Ts:(length(cut_rx_signal) -1)*Ts;
+        freqline = 0:fs/length(cut_rx_signal):fs - 1;
+        
+        
+        Q_carr = -sin(2*pi*fc*t);
+        I_carr = cos(2*pi*fc*t);
+        
+        Q_cut_data1 = cut_data1.*Q_carr;
+        I_cut_data1 = cut_data1.*I_carr;
+        
+        xx=fft(complex(I_cut_data1,Q_cut_data1));
+        
+        left_index = fft_size/2;
+        right_index = fft_size/2 - 1;
+        
+        
+        restored = [xx(end-right_index:end), xx(1:left_index)];
+        central_zero_sample = fft_size/2 + 1;
+
+        cut_index = fft_size/2 - guard_size;
+        
+
+        x = [restored(central_zero_sample - cut_index:central_zero_sample - 1), ...
+            restored(central_zero_sample + 1:central_zero_sample + cut_index)];
     end
 
 

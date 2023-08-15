@@ -6,6 +6,10 @@ classdef DG
     %   WG.load_data(connectionID, data, chNum, fs, ArbFileName)
     %   upload data to generator and send it to chosen channel. Set sample
     %   frequency
+    properties (Constant)
+        M = containers.Map([25e6, 125e6], [7, 3]);
+        
+    end
 
     
     methods (Static)
@@ -24,9 +28,9 @@ classdef DG
             instr_object.Timeout = 10;
         end
 
-        function load_data(connID, data)
+        function load_data(connID, data, fs, amp)
 
-
+            
             L = 16383;
             zeros_length = L - length(data);
             zeros_arr = zeros(1, zeros_length);
@@ -48,19 +52,18 @@ classdef DG
             instr_name = writeread(instr_object, '*IDN?');
             disp(['dg -> connected to ', instr_name]);
 
-            interp_value = writeread(instr_object, ':DATA:POIN:INT?');
-            disp(['before load: ', interp_value]);
-%             write(instr_object, ':DATA:POIN:INT OFF');
-
+            
             interp_value = writeread(instr_object, ':DATA:POIN:INT?');
             disp(['before load: ', interp_value]);
             
-            write(instr_object, ':VOLTage 0.5');
+            write(instr_object, [':VOLTage ', num2str(amp)]);
             write(instr_object, ':FUNCtion:ARB:MODE PLAY');
-            write(instr_object, ':FUNCtion:ARB:SAMPLE 3');
+            write(instr_object, [':FUNCtion:ARB:SAMPLE ', num2str(DG.M(fs))]);
 %             write(instr_object, ':DATA:POIN:INT OFF');
 
             write(instr_object, [':DATA VOLATILE,', s_string]);
+            write(instr_object, '*WAI');
+%             write(instr_object, ':DATA:POIN:INT OFF');
             er = writeread(instr_object, 'SYST:ERR?');
             disp(['dg -> errors: ' , er]);
             write(instr_object, ':OUTPut ON');  
