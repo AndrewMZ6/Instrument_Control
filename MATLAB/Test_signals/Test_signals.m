@@ -3,8 +3,8 @@ classdef Test_signals
   properties (Constant)
 
     fft_size = 1024;
-    interpolated_size = 16500;
-    guards_size = 100;
+    interpolated_size = 10000;
+    guards_size = 70;
     fc_ofdm = 20e6;
     fs_ofdm = 125e6;
     M_ofdm = 16;
@@ -63,8 +63,8 @@ classdef Test_signals
     
           freqline = 0:fs/isize:fs - 1;
     
-          Q_carr = -sin(2*pi*fc*t);
-          I_carr = cos(2*pi*fc*t);
+          I_carr = -sin(2*pi*fc*t);
+          Q_carr = cos(2*pi*fc*t);
           rf_sig_ofdm = real(sig_ofdm_shifted_time).*I_carr + imag(sig_ofdm_shifted_time).*Q_carr;
 
 
@@ -81,6 +81,10 @@ classdef Test_signals
           output.sig_ofdm = sig_ofdm_shifted;
           output.modulated_bits = sig2;
           output.modulation_order = M;
+          output.Fs = fs;
+
+          est_BW = ((fs*fsize)/isize)*1e-6;
+          disp(['Estimated ofdm BW = ', num2str(est_BW), ' MHz']);
 
     end
 
@@ -117,13 +121,9 @@ classdef Test_signals
 
     function output_data = process_ofdm(rx_signal, tx_signal, M)
         
-        % signal - struct containing the following fields:
-        %   signal.data - real valued (not complex) passband ofdm signal
-        %   signal.tx_data_length - length of the transmited ofdm signal
-        %
-        % output - struct with fileds:
-        %   output.modulated_data - payload modulated data
-        %   output.bits - demodulated payload ready to be compared
+        %process_ofdm - method made to accept real valued time domain ofdm
+        % signal as input and fetch complex data from it as well as
+        % demodulate it using "demodulate_ofdm_data" method
         
         [correlation_without_window, lags] = xcorr(rx_signal, tx_signal);
         
@@ -139,10 +139,10 @@ classdef Test_signals
         start1 = lags(max_idx1);
         cut_rx_signal = rx_signal(start1 + 1:start1 + length(tx_signal));
 
-%         modulated_data = Test_signals.to_baseband(cut_rx_signal, fc, fs);
+        modulated_data = Test_signals.to_baseband(cut_rx_signal);
 
-        spec1 = fft(cut_rx_signal);
-        modulated_data = [spec1(1537 - 412:1536), spec1(1538:1537 + 412)];
+%         spec1 = fft(cut_rx_signal);
+%         modulated_data = [spec1(1537 - 412:1536), spec1(1538:1537 + 412)];
 
 
         output_data.modulated_data = modulated_data;
@@ -151,9 +151,6 @@ classdef Test_signals
     
     function bits = demodulate_ofdm_data(modulated_data, M)
 
-        std(modulated_data)
-        disp(['prop = ', num2str(Test_signals.x)])
-        
         normalized_data = (modulated_data./std(modulated_data));
         normalization_factor = sqrt(M) - 1;
 
@@ -161,31 +158,32 @@ classdef Test_signals
     end
 
 
-    function x = to_baseband(cut_rx_signal, fc, fs)
+    function x = to_baseband(cut_rx_signal)
 
-        fs = fs;
+        fs = Test_signals.fs_ofdm;
+        fc = Test_signals.fc_ofdm;
+        fsize = Test_signals.fft_size;
+        gsize = Test_signals.guards_size;
+
         Ts = 1/fs;
-        fc = fc;
         t = 0:Ts:(length(cut_rx_signal) -1)*Ts;
-        freqline = 0:fs/length(cut_rx_signal):fs - 1;
         
+        I_carr = -sin(2*pi*fc*t);
+        Q_carr = cos(2*pi*fc*t);
         
-        Q_carr = -sin(2*pi*fc*t);
-        I_carr = cos(2*pi*fc*t);
+        I_cut_data = cut_rx_signal.*I_carr;
+        Q_cut_data = cut_rx_signal.*Q_carr;
         
-        Q_cut_data1 = cut_data1.*Q_carr;
-        I_cut_data1 = cut_data1.*I_carr;
+        xx=fft(complex(I_cut_data, Q_cut_data));
         
-        xx=fft(complex(I_cut_data1,Q_cut_data1));
-        
-        left_index = fft_size/2;
-        right_index = fft_size/2 - 1;
+        left_index = fsize/2;
+        right_index = fsize/2 - 1;
         
         
         restored = [xx(end-right_index:end), xx(1:left_index)];
-        central_zero_sample = fft_size/2 + 1;
+        central_zero_sample = left_index + 1;
 
-        cut_index = fft_size/2 - guard_size;
+        cut_index = left_index - gsize;
         
 
         x = [restored(central_zero_sample - cut_index:central_zero_sample - 1), ...

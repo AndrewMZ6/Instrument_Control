@@ -7,6 +7,7 @@ classdef DG
     %   upload data to generator and send it to chosen channel. Set sample
     %   frequency
     properties (Constant)
+        
         M = containers.Map([25e6, 125e6], [7, 3]);
         
     end
@@ -29,8 +30,22 @@ classdef DG
         end
 
         function load_data(connID, data, fs, amp)
-
             
+
+            % If generator sampling frequency is not available
+            % make a warning and stop execution
+
+            try
+                Fs_instr = DG.M(fs);
+            catch ME
+                if (strcmp(ME.identifier, 'MATLAB:Containers:Map:NoKey'))
+                    warning('Generator sampling frequency can only be 25 MHz or 125 MHz');
+                    return;
+                end
+            end
+
+
+
             L = 16383;
             zeros_length = L - length(data);
             zeros_arr = zeros(1, zeros_length);
@@ -58,12 +73,11 @@ classdef DG
             
             write(instr_object, [':VOLTage ', num2str(amp)]);
             write(instr_object, ':FUNCtion:ARB:MODE PLAY');
-            write(instr_object, [':FUNCtion:ARB:SAMPLE ', num2str(DG.M(fs))]);
-%             write(instr_object, ':DATA:POIN:INT OFF');
+            write(instr_object, [':FUNCtion:ARB:SAMPLE ', num2str(Fs_instr)]);
+
 
             write(instr_object, [':DATA VOLATILE,', s_string]);
             write(instr_object, '*WAI');
-%             write(instr_object, ':DATA:POIN:INT OFF');
             er = writeread(instr_object, 'SYST:ERR?');
             disp(['dg -> errors: ' , er]);
             write(instr_object, ':OUTPut ON');  
