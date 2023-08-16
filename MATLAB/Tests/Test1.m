@@ -89,7 +89,7 @@ clc; close all; clearvars;
 addpath('..\Test_signals\', '..\DG_waveform_generator\', '..\MSO_oscilloscope\', '..\TF_waveform_generator');
 
 % signal = Test_signals.normalized_sin();
-signal = Test_signals.normalized_ofdm(1024, 12800, 100, 15e6, 125e6, 16);
+signal = Test_signals.normalized_ofdm();
 
 figure;
     plot(signal.freqline, abs(fft(signal.data)));

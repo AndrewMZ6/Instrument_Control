@@ -2,53 +2,66 @@ classdef Test_signals
 
   properties (Constant)
 
-    x = 10;
+    fft_size = 1024;
+    interpolated_size = 16500;
+    guards_size = 100;
+    fc_ofdm = 20e6;
+    fs_ofdm = 125e6;
+    M_ofdm = 16;
+    
+
+    % common formula for BW, Fs, FftSize, InterpolatedSize
+    %
+    %          Fs*FftSize
+    % BW = ------------------
+    %       InterpolatedSize                  
+    %
+
   end
 
   methods (Static)
 
-      function output = normalized_ofdm(fft_size, interpolated_size, guards_size, fc, fs, M)
+      function output = normalized_ofdm()
     % Create real (not complex) normalized in time domain (values are locked to
     % -1 to +1) OFDM symbol with length "interp_size"
+        
+      
+      % normalized_ofdm control panel
+          grds = Test_signals.guards_size;
+          fsize = Test_signals.fft_size;
+          isize = Test_signals.interpolated_size;
+          M = Test_signals.M_ofdm;
+          fc = Test_signals.fc_ofdm;
+          fs = Test_signals.fs_ofdm;
 
-      guards = guards_size; % 100
-      fft_size = fft_size;
-      interpolated_size = interpolated_size; %12800;
 
+      % maping bits
+          sig_ofdm = zeros(1, fsize);
+          sc_num = fsize - grds*2;
 
-      % maaping bits
-          sig_ofdm = zeros(1, fft_size);
-          sc_num = fft_size - guards*2;
-    
-          MORDER = M;
-          BPS = log2(MORDER);
+          BPS = log2(M);
           bits = randi([0, 1], 1, sc_num*BPS);
-            
     
-          sig2 = qammod(bits.', MORDER, 'InputType','bit');
-
+          sig2 = qammod(bits.', M, 'InputType','bit');
     
-    
-          sig_ofdm(guards + 1:fft_size/2) = sig2(1:sc_num/2);
-          sig_ofdm(fft_size/2 + 1) = complex(0, 0);
-          sig_ofdm(fft_size/2 + 2:end-guards + 1) = sig2(sc_num/2 + 1:end);
+          sig_ofdm(grds + 1:fsize/2) = sig2(1:sc_num/2);
+          sig_ofdm(fsize/2 + 1) = complex(0, 0);
+          sig_ofdm(fsize/2 + 2:end - grds + 1) = sig2(sc_num/2 + 1:end);
 
       % -------------------------------------------------------
 
 
       sig_ofdm_shifted = fftshift(sig_ofdm);
-      sig_ofdm_shifted = [sig_ofdm_shifted(1:fft_size/2), complex(zeros(1, interpolated_size - fft_size)), sig_ofdm_shifted(fft_size/2 + 1: end)];
+      sig_ofdm_shifted = [sig_ofdm_shifted(1:fsize/2), complex(zeros(1, isize - fsize)), sig_ofdm_shifted(fsize/2 + 1: end)];
 
       sig_ofdm_shifted_time = ifft(sig_ofdm_shifted);
 
 
       % Carrier frequency. Baseband to passband
-          fs = fs;
           Ts = 1/fs;
-          fc = fc;
-          t = 0:Ts:(interpolated_size - 1)*Ts;
+          t = 0:Ts:(isize - 1)*Ts;
     
-          freqline = 0:fs/interpolated_size:fs - 1;
+          freqline = 0:fs/isize:fs - 1;
     
           Q_carr = -sin(2*pi*fc*t);
           I_carr = cos(2*pi*fc*t);
