@@ -3,10 +3,10 @@ classdef Test_signals
   properties (Constant)
 
     fft_size = 1024;
-    interpolated_size = 10000;
-    guards_size = 70;
-    fc_ofdm = 20e6;
-    fs_ofdm = 125e6;
+    interpolated_size = 1024*5*2.5;
+    guards_size = 100;
+    fc_ofdm = 5e6;
+    fs_ofdm = 25e6;
     M_ofdm = 16;
     
 
@@ -126,6 +126,11 @@ classdef Test_signals
         % demodulate it using "demodulate_ofdm_data" method
         
         [correlation_without_window, lags] = xcorr(rx_signal, tx_signal);
+
+        figure;
+            plot(abs(correlation_without_window));
+            grid on;
+            title('process\_ofdm -> correlation');
         
 
         L = length(correlation_without_window);

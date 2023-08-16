@@ -98,7 +98,7 @@ classdef MSO
                 try
                     % set the acquirance regime
                     write(instr_object, ':STOP');
-                    write(instr_object, [':WAV:SOUR CHAN', num2str(ch_num)]);
+                    write(instr_object, [':WAV:SOUR MATH', num2str(ch_num)]);
         
                     write(instr_object, ':WAV:MODE NORMal');
                     write(instr_object, ':WAV:FORM BYTE');
@@ -199,16 +199,16 @@ classdef MSO
 
         end
 
-        function [decimated_sig, preambula] = read_data_max(connectionID, ch_num)
+        function [decimated_sig, preambula] = read_data_max(connectionID, ch_num, fs_gen)
 
             
-            
+            [~] = MSO.read_data_raw(connectionID, ch_num, 10e3);
             % connect to the instrument
             instr_object = MSO.connect_visadev(connectionID);
             
             instr_name = writeread(instr_object, '*IDN?');
             disp(['mso -> connected to ', instr_name]);
-
+            
 
             read_success_flag = 0;
 
@@ -217,10 +217,11 @@ classdef MSO
                 try
             
                     % set the acquirance regime
-                    write(instr_object, ':STOP');
+                    
                     write(instr_object, [':WAV:SOUR CHAN', num2str(ch_num)]);
         
                     write(instr_object, ':WAV:MODE MAX');
+                    write(instr_object, ':STOP');
                     write(instr_object, ':WAV:FORM BYTE');
                     
                     % acquire preambula
@@ -238,12 +239,15 @@ classdef MSO
                     
                     % display system errors
                     disp(['mso -> errors: ' , errs]);
+
+                    figure;
+                        plot(data);
                     
                     [revived_sig, preambula] = MSO.process_acquired_data(data, pre);
                     
                     
-                    fs_gen = 125e6;
-                    decimate_coeff = 2e9/fs_gen;
+                    
+                    decimate_coeff = 2e9/fs_gen;   % 2e9 is oscilloscope sampling frequency
                     decimated_sig = revived_sig(1:decimate_coeff:end);
 
                     read_success_flag = 1;

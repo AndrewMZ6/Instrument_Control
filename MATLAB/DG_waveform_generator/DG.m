@@ -87,53 +87,6 @@ classdef DG
             disp(['points? = ', num2str(pts)]);
 
         end
-
-        function load_data_uint(connID, data)
-            
-            % normalize if data abolute
-            data_max = max(abs(data));
-
-            if data_max > 1
-                data = data/data_max;
-            end
-
-            data = round(data, 4);
-            L = num2str(length(data));
-            L_string = num2str(length(L));
-
-            
-            s_string = DG.stringify(data);
-
-            instr_object = DG.connect_visadev(connID);
-            
-            % Ask the instrument for it's name
-            instr_name = writeread(instr_object, '*IDN?');
-            disp(['dg -> connected to ', instr_name]);
-
-
-            write(instr_object, ':DATA:POIN:INT OFF');
-            interp_value = writeread(instr_object, ':DATA:POIN:INT?');
-            disp(['before load: ', interp_value]);
-            
-            disp(s_string);
-            
-            command = [':DATA:DAC16 VOLATILE,END,', '#', L_string, L, s_string];
-            disp(command);
-            write(instr_object, command);
-
-
-            interp_value = writeread(instr_object, ':DATA:POIN:INT?');
-            disp(['after load: ', interp_value]);
-
-
-            er = writeread(instr_object, 'SYST:ERR?');
-            disp(['dg -> errors: ' , er]);
-
-
-            write(instr_object, ':OUTPut ON');  
-
-        end
-
-
     end
+    
 end
