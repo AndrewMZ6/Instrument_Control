@@ -54,7 +54,6 @@ classdef MSO
         end
         
         function [processed_data, preambula_struct] = process_acquired_data(data, preambula)
-            disp(data(1:10));
             preambula_struct = MSO.create_preambula_struct(preambula);
 
             if (preambula_struct.points.value ~= length(data))
@@ -169,7 +168,7 @@ classdef MSO
     %                     
     %                     % check for system errors
     %                     errs = writeread(instr_object, ':SYST:ERR?');
-    %                     write(instr_object, ':RUN');
+                        write(instr_object, ':RUN');
                         
 %                         disp(['mso -> errors: ' , errs]);
                         
@@ -199,7 +198,7 @@ classdef MSO
 
         end
 
-        function [decimated_sig, preambula] = read_data_max(connectionID, ch_num, fs_gen)
+        function [decimated_sig, preambula] = read_data(connectionID, ch_num, fs_gen)
 
             
             [~] = MSO.read_data_raw(connectionID, ch_num, 10e3);
@@ -207,58 +206,75 @@ classdef MSO
             instr_object = MSO.connect_visadev(connectionID);
             
             instr_name = writeread(instr_object, '*IDN?');
-            disp(['mso -> connected to ', instr_name]);
+            disp(["mso -> connected to ", instr_name]);
             
-
+            
             read_success_flag = 0;
+            while_loop = 0;
 
-            while ~read_success_flag
             
-                try
-            
-                    % set the acquirance regime
-                    
-                    write(instr_object, [':WAV:SOUR CHAN', num2str(ch_num)]);
+
+                while ~read_success_flag
+                    if while_loop < 50
+
+                        while_loop = while_loop + 1;
+    
+                        try
+                            disp(['mso -> reading iteration #', num2str(while_loop)]);
+                            % set the acquirance regime
+                            write(instr_object, ':STOP');
+                            write(instr_object, [':WAV:SOUR CHAN', num2str(ch_num)]);
+                
+                            write(instr_object, ':WAV:MODE MAX');
         
-                    write(instr_object, ':WAV:MODE MAX');
-                    write(instr_object, ':STOP');
-                    write(instr_object, ':WAV:FORM BYTE');
-                    
-                    % acquire preambula
-                    pre = writeread(instr_object, ':WAV:PRE?');
-                    
-                    % acquire data
-                    write(instr_object, ':WAV:DATA?');
-                    write(instr_object, '*WAI');
-                    data = readbinblock(instr_object, 'uint8');
+                            write(instr_object, ':WAV:FORM BYTE');
+                            
+                            % acquire preambula
+                            pre = writeread(instr_object, ':WAV:PRE?');
+                            
+                            % acquire data
+                            write(instr_object, ':WAV:DATA?');
+                            write(instr_object, '*WAI');
+                            data = readbinblock(instr_object, 'uint8');
+                            
+                            disp(['MSO DEBUG -> data length = ', num2str(length(data))]);
+                            disp(['MSO DEBUG -> data(1:10) = ', num2str(data(1:10))]);
+                            
+                            
+                            % check for system errors
+                            errs = writeread(instr_object, ':SYST:ERR?');
+                            write(instr_object, ':RUN');
+                            
+                            % display system errors
+                            disp(['mso -> errors: ' , errs]);
         
-                    
-                    % check for system errors
-                    errs = writeread(instr_object, ':SYST:ERR?');
-                    write(instr_object, ':RUN');
-                    
-                    % display system errors
-                    disp(['mso -> errors: ' , errs]);
+                            figure;
+                                plot(data);
+                            
+                            [revived_sig, preambula] = MSO.process_acquired_data(data, pre);
+                            
+                            
+                            
+                            decimate_coeff = 2e9/fs_gen;   % 2e9 is oscilloscope sampling frequency
+                            decimated_sig = revived_sig(1:decimate_coeff:end);
+        
+                            read_success_flag = 1;
+        
+                        catch err
+        
+                            disp(['mso -> catched error in read_data_max: ', err.message]);
+                            write(instr_object, ':RUN');
+        
+                        end
+                    else
+                        
+                        disp('mso -> errors: Usuccesfull read');
+                        return;
 
-                    figure;
-                        plot(data);
-                    
-                    [revived_sig, preambula] = MSO.process_acquired_data(data, pre);
-                    
-                    
-                    
-                    decimate_coeff = 2e9/fs_gen;   % 2e9 is oscilloscope sampling frequency
-                    decimated_sig = revived_sig(1:decimate_coeff:end);
-
-                    read_success_flag = 1;
-
-                catch err
-
-                    disp(['catched error in read_data_max: ', err.message]);
-
+                    end
+    
                 end
 
-            end
 
 
         end

@@ -2,12 +2,18 @@ classdef Test_signals
 
   properties (Constant)
 
-    fft_size = 1024;
-    interpolated_size = 1024*5*2.5;
-    guards_size = 100;
-    fc_ofdm = 5e6;
-    fs_ofdm = 25e6;
-    M_ofdm = 16;
+      %OFDM control panel
+        fft_size = 1024;
+        interpolated_size = 1024*10;
+        guards_size = 100;
+        fc_ofdm = 15e6;
+        fs_ofdm = 125e6;
+        M_ofdm = 16;
+
+     %SIN control panel
+        N_sin = 10000;
+        fs_sin = 125e6;
+        fc_sin = 15e6;
     
 
     % common formula for BW, Fs, FftSize, InterpolatedSize
@@ -105,16 +111,21 @@ classdef Test_signals
         sins = sins/max(abs(sins));
     end
 
-    function [single_sin, freqline, timeline] = normalized_sin()
+    function signal = normalized_sin()
         
-        N = 10000;
-        fs = 125e6;
-        fc = 5e6;
+        N = Test_signals.N_sin;
+        fs = Test_signals.fs_sin;
+        fc = Test_signals.fc_sin;
         
         freqline = 0:fs/N:fs - 1;
-
         timeline = 0:1/fs:(N -1)/fs;
+        
         single_sin = sin(2*pi*fc*timeline);
+
+        signal.data = single_sin;
+        signal.freqline = freqline;
+        signal.timeline = timeline;
+        signal.Fs = fs;
 
     end
     
