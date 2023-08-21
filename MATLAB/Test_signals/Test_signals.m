@@ -143,8 +143,9 @@ classdef Test_signals
             grid on;
             title('process\_ofdm -> correlation');
         
-
-        L = length(correlation_without_window);
+        
+        L = length(correlation_without_window) + 1;
+        disp(['TEST SIGNALS DEBUG -> L = ', num2str(L)]);
         kaiser_win = [kaiser(L/2 - 1).', kaiser(L/2).'];
         gauss_win = [gausswin(L/2 - 1 , 2).', gausswin(L/2, 2).'];
         

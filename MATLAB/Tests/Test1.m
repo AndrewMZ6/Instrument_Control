@@ -44,6 +44,7 @@ figure;
     xlabel('Отсчёты');
     ylabel('Амплитуда, В');
 
+
 processed_signal = Test_signals.process_ofdm(oscilloscope_data, signal.data, signal.modulation_order);
 scatterplot(processed_signal.modulated_data);
     title('Созвездие принятого OFDM сигнала', 'Color','Black');

@@ -256,6 +256,7 @@ classdef MSO < handle
                             end
 
                             if  (length(data) == 1000)
+                                clear instr_object;
                                 instr_object = MSO.read_data_raw(connectionID, ch_num, 10e3);
                                 continue;
                             end
@@ -263,8 +264,10 @@ classdef MSO < handle
                             
                             % check for system errors
                             errs = writeread(instr_object, ':SYST:ERR?');
+                            srate = writeread(instr_object, ':ACQuire:SRATe?');
+                            disp(['MSO DEBUG -> SRATE = ', srate]);
                             write(instr_object, ':RUN');
-                            
+                            read_success_flag = 1;
                             % display system errors
                             disp(['mso -> errors: ' , errs]);
         
@@ -275,11 +278,13 @@ classdef MSO < handle
                             
                             
                             
-                            decimate_coeff = 2e9/fs_gen;   % 2e9 is oscilloscope sampling frequency
-%                             decimated_sig = revived_sig(1:decimate_coeff:end);
+                            decimate_coeff = str2num(srate)/fs_gen;   % 2e9 is oscilloscope sampling frequency
+                            disp(['MSO DEBUG -> DECI COEFF = ', num2str(decimate_coeff)]);
+
+%                             decimated_sig = revived_sig(decimate_coeff:decimate_coeff:end);
                             decimated_sig = decimate(revived_sig, decimate_coeff);
         
-                            read_success_flag = 1;
+                            
         
                         catch err
         
