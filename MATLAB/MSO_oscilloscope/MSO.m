@@ -1,4 +1,5 @@
-classdef MSO
+classdef MSO < handle
+    
     % methods:
     %   MSO.channel_amp(connectionID, chNum, amp)
     %   sets the amplitude value of the Trueform 33600A generator
@@ -8,11 +9,15 @@ classdef MSO
     %   frequency
     
     
+
     methods (Static)
         function instr_object = connect_visadev(connectionID)
+
             instr_object = visadev(connectionID);
             instr_object.Timeout = 10;
+            
         end
+
 
         function preambula_struct = create_preambula_struct(preambula)
             
@@ -132,7 +137,7 @@ classdef MSO
         end
 
 
-        function [revived_sig, preambula] = read_data_raw(connectionID, ch_num, points)
+        function [instr_object, revived_sig, preambula] = read_data_raw(connectionID, ch_num, points)
 
 
             % connect to the instrument
@@ -201,13 +206,8 @@ classdef MSO
         function [decimated_sig, preambula] = read_data(connectionID, ch_num, fs_gen)
 
             
-            [~] = MSO.read_data_raw(connectionID, ch_num, 10e3);
-            % connect to the instrument
-            instr_object = MSO.connect_visadev(connectionID);
             
-            instr_name = writeread(instr_object, '*IDN?');
-            disp(["mso -> connected to ", instr_name]);
-            
+            instr_object = MSO.read_data_raw(connectionID, ch_num, 10e3);
             
             read_success_flag = 0;
             while_loop = 0;
@@ -220,6 +220,19 @@ classdef MSO
                         while_loop = while_loop + 1;
     
                         try
+
+
+                            
+
+                            % connect to the instrument
+                            
+%                             instr_object = MSO.connect_visadev(connectionID);
+ 
+                            
+                            instr_name = writeread(instr_object, '*IDN?');
+                            disp(["mso -> connected to ", instr_name]);
+
+
                             disp(['mso -> reading iteration #', num2str(while_loop)]);
                             % set the acquirance regime
                             write(instr_object, ':STOP');
@@ -238,8 +251,15 @@ classdef MSO
                             data = readbinblock(instr_object, 'uint8');
                             
                             disp(['MSO DEBUG -> data length = ', num2str(length(data))]);
-                            disp(['MSO DEBUG -> data(1:10) = ', num2str(data(1:10))]);
-                            
+                            if (length(data) == 1)
+                                continue;
+                            end
+
+                            if  (length(data) == 1000)
+                                instr_object = MSO.read_data_raw(connectionID, ch_num, 10e3);
+                                continue;
+                            end
+
                             
                             % check for system errors
                             errs = writeread(instr_object, ':SYST:ERR?');
@@ -256,7 +276,8 @@ classdef MSO
                             
                             
                             decimate_coeff = 2e9/fs_gen;   % 2e9 is oscilloscope sampling frequency
-                            decimated_sig = revived_sig(1:decimate_coeff:end);
+%                             decimated_sig = revived_sig(1:decimate_coeff:end);
+                            decimated_sig = decimate(revived_sig, decimate_coeff);
         
                             read_success_flag = 1;
         

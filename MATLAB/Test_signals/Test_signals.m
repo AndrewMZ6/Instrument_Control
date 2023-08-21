@@ -4,7 +4,7 @@ classdef Test_signals
 
       %OFDM control panel
         fft_size = 1024;
-        interpolated_size = 1024*10;
+        interpolated_size = 12800;
         guards_size = 100;
         fc_ofdm = 15e6;
         fs_ofdm = 125e6;
@@ -30,7 +30,7 @@ classdef Test_signals
       function output = normalized_ofdm()
     % Create real (not complex) normalized in time domain (values are locked to
     % -1 to +1) OFDM symbol with length "interp_size"
-        
+      
       
       % normalized_ofdm control panel
           grds = Test_signals.guards_size;
@@ -163,6 +163,7 @@ classdef Test_signals
 
         output_data.modulated_data = modulated_data;
         output_data.bits = Test_signals.demodulate_ofdm_data(modulated_data, M);
+        output_data.cut_rx_signal = cut_rx_signal;
     end
     
     function bits = demodulate_ofdm_data(modulated_data, M)
