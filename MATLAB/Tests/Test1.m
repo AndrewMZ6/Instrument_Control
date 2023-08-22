@@ -53,18 +53,3 @@ scatterplot(processed_signal.modulated_data);
 [er, errate] = biterr(signal.bits, processed_signal.bits);
 er 
 errate
-
-% 
-% figure;
-%     plot(signal.freqline/1e6, abs(fft(processed_signal.cut_rx_signal)));
-%     grid on;
-%     title('Спектр принятого OFDM сигнала');
-%     xlabel('Частота, МГц');
-
-% 
-% figure;
-%     plot(d_max);
-% 
-% 
-% figure;
-%     plot(abs(xcorr(d_max, signal.data)));
