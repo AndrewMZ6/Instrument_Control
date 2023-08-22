@@ -53,3 +53,12 @@ scatterplot(processed_signal.modulated_data);
 [er, errate] = biterr(signal.bits, processed_signal.bits);
 er 
 errate
+
+
+%% READ RAW
+
+clc; close all; clearvars;
+osci_conn_ID = 'USB0::0x1AB1::0x0515::MS5A244909354::0::INSTR';
+channel_num = 1;
+
+rr = MSO.read_raw(osci_conn_ID, channel_num, 10e3);
