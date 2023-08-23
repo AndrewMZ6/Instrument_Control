@@ -61,9 +61,18 @@ clc; close all; clearvars;
 osci_conn_ID = 'USB0::0x1AB1::0x0515::MS5A244909354::0::INSTR';
 channel_num = 1;
 
-rr = MSO.read_raw(osci_conn_ID, channel_num, 1000e3);
+tic
+
+[rr, t] = MSO.read_raw_ascii(osci_conn_ID, channel_num, 100e3);
 splitted = split(rr, ',');
 
+
+
+
+
+
+t1 = toc;
+disp(['MSO.read_raw elapsed time ', num2str(t1), ' seconds']);
 
 arr = zeros(1, length(splitted));
 for i = 1:length(splitted) - 1
@@ -79,6 +88,16 @@ for i = 1:length(splitted) - 1
     end
 end
 
+t2 = toc;
+disp(['for loop elapsed time ', num2str(t2 - t1), ' seconds']);
 
 figure;
     plot(arr);
+    grid on;
+    title('Принятый с осциллографа сигнал');
+    xlabel('Отсчёты');
+    ylabel('Аплитуда, В');
+
+
+t3 = toc;
+disp(['plot elapsed time ', num2str(t3 - t2), ' seconds']);

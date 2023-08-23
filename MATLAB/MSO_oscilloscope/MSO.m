@@ -303,7 +303,7 @@ classdef MSO < handle
         end
 
 
-        function revived_sig = read_raw(connectionID, ch_num, points)
+        function [revived_sig, timeline] = read_raw_ascii(connectionID, ch_num, points)
 
 
             % connect to the instrument
@@ -336,6 +336,10 @@ classdef MSO < handle
                         % acquire data
                         revived_sig = writeread(instr_object, ':WAV:DATA?');
                         write(instr_object, ':RUN');
+                        preambula_struct = MSO.create_preambula_struct(pre);
+                        temp = 0:preambula_struct.points.value;
+                        timeline = temp*preambula_struct.xincrement.value;
+                        
                         return;
                         write(instr_object, ':WAV:DATA?');
                         write(instr_object, '*WAI');
