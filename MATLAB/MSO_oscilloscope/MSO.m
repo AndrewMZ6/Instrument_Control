@@ -271,11 +271,8 @@ classdef MSO < handle
                             % display system errors
                             disp(['mso -> errors: ' , errs]);
         
-                            figure;
-                                plot(data);
                             
                             [revived_sig, preambula] = MSO.process_acquired_data(data, pre);
-                            
                             
                             
                             decimate_coeff = str2num(srate)/fs_gen;   % 2e9 is oscilloscope sampling frequency
@@ -306,7 +303,7 @@ classdef MSO < handle
         end
 
 
-        function [instr_object, revived_sig, preambula] = read_raw(connectionID, ch_num, points)
+        function revived_sig = read_raw(connectionID, ch_num, points)
 
 
             % connect to the instrument
@@ -327,15 +324,19 @@ classdef MSO < handle
                         % set the acquirance regime
                         write(instr_object, ':STOP');
                         write(instr_object, [':WAV:SOUR CHAN', num2str(ch_num)]);
-            
                         write(instr_object, ':WAV:MODE RAW');
-                        write(instr_object, ':WAV:FORM BYTE');
                         write(instr_object, [':WAV:POINts ', num2str(points)]);
+
+                        write(instr_object, ':WAV:FORM ASCii');
+                        
                         
                         % acquire preambula
                         pre = writeread(instr_object, ':WAV:PRE?');
                         
                         % acquire data
+                        revived_sig = writeread(instr_object, ':WAV:DATA?');
+                        write(instr_object, ':RUN');
+                        return;
                         write(instr_object, ':WAV:DATA?');
                         write(instr_object, '*WAI');
                         data = readbinblock(instr_object, 'uint8');
@@ -346,10 +347,11 @@ classdef MSO < handle
                         
                         disp(['mso -> errors: ' , errs]);
                         
-                        [revived_sig, preambula] = MSO.process_acquired_data(data, pre);
+%                         [revived_sig, preambula] = MSO.process_acquired_data(data, pre);
                         read_success_flag = 1;
 %                         revived_sig = 0;
 %                         preambula = 0;
+                        revived_sig = data;
                         
     
                     catch err

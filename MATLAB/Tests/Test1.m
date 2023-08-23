@@ -61,4 +61,24 @@ clc; close all; clearvars;
 osci_conn_ID = 'USB0::0x1AB1::0x0515::MS5A244909354::0::INSTR';
 channel_num = 1;
 
-rr = MSO.read_raw(osci_conn_ID, channel_num, 10e3);
+rr = MSO.read_raw(osci_conn_ID, channel_num, 1000e3);
+splitted = split(rr, ',');
+
+
+arr = zeros(1, length(splitted));
+for i = 1:length(splitted) - 1
+    if i == 1
+        temp1 = splitted(i);
+        reg_expre = '[+|-].*';
+        m = regexp(temp1, reg_expre, 'match');
+        item = str2double(m);
+        arr(i) = item;
+    else
+        item = str2double(splitted(i));
+        arr(i) = item;
+    end
+end
+
+
+figure;
+    plot(arr);
