@@ -58,6 +58,9 @@ errate
 %% READ RAW
 
 clc; close all; clearvars;
+addpath('..\Test_signals\', '..\DG_waveform_generator\', '..\MSO_oscilloscope\', '..\TF_waveform_generator');
+
+
 osci_conn_ID = 'USB0::0x1AB1::0x0515::MS5A244909354::0::INSTR';
 channel_num = 1;
 
@@ -74,22 +77,13 @@ splitted = split(rr, ',');
 t1 = toc;
 disp(['MSO.read_raw elapsed time ', num2str(t1), ' seconds']);
 
-arr = zeros(1, length(splitted));
-for i = 1:length(splitted) - 1
-    if i == 1
-        temp1 = splitted(i);
-        reg_expre = '[+|-].*';
-        m = regexp(temp1, reg_expre, 'match');
-        item = str2double(m);
-        arr(i) = item;
-    else
-        item = str2double(splitted(i));
-        arr(i) = item;
-    end
-end
+
+reg_expre = '[-+][\d\.]+E[+-]\d+';
+m = regexp(rr, reg_expre, 'match');
+arr = str2double(m);
 
 t2 = toc;
-disp(['for loop elapsed time ', num2str(t2 - t1), ' seconds']);
+disp(['regex elapsed time ', num2str(t2 - t1), ' seconds']);
 
 figure;
     plot(arr);
