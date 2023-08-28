@@ -378,5 +378,81 @@ classdef MSO < handle
 
         end
 
+        function [revived_sig, timeline] = read_raw_bytes(connectionID, ch_num, points)
+
+
+            % connect to the instrument
+            instr_object = MSO.connect_visadev(connectionID);
+            
+            instr_name = writeread(instr_object, '*IDN?');
+            disp(['mso -> connected to ', instr_name]);
+
+
+            read_success_flag = 0;
+            iteration_count = 0;
+
+            while ~read_success_flag
+                if iteration_count < 50
+                    try
+                        iteration_count = iteration_count + 1;
+                
+                        % set the acquirance regime
+                        write(instr_object, ':STOP');
+                        write(instr_object, [':WAV:SOUR CHAN', num2str(ch_num)]);
+                        write(instr_object, ':WAV:MODE RAW');
+                        write(instr_object, [':WAV:POINts ', num2str(points)]);
+
+                        write(instr_object, ':WAV:FORM BYTE');
+                        
+                        
+                        % acquire preambula
+                        pre = writeread(instr_object, ':WAV:PRE?');
+                        
+                        % acquire data
+%                         write(instr_object, ':WAV:DATA?');
+%                         write(instr_object, ':RUN');
+                        preambula_struct = MSO.create_preambula_struct(pre);
+                        temp = 0:preambula_struct.points.value;
+                        timeline = temp*preambula_struct.xincrement.value;
+                        
+                        write(instr_object, ':WAV:DATA?');
+                        write(instr_object, '*WAI');
+                        data = readbinblock(instr_object, 'uint8');
+                        disp(['readbinblock length = ', num2str(length(data))]);
+    %                     
+    %                     % check for system errors
+                        errs = writeread(instr_object, ':SYST:ERR?');
+                        write(instr_object, ':RUN');
+                        
+                        disp(['mso -> errors: ' , errs]);
+                        
+                        [revived_sig, preambula] = MSO.process_acquired_data(data, pre);
+                        read_success_flag = 1;
+%                         revived_sig = 0;
+%                         preambula = 0;
+                        
+                      
+                        
+    
+                    catch err
+                
+
+                        disp(['catched error read_data_raw: ', err.message]);
+                        disp(['iteration #', num2str(iteration_count)]);
+
+                    end
+
+                else
+                    revived_sig = 0;
+                    preambula = 0;
+                    break;
+                end
+
+
+            end
+
+
+        end
+
     end
 end

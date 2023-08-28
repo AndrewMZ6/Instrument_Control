@@ -57,7 +57,12 @@ errate
 
 %% READ RAW
 
-clc; close all; clearvars;
+clc; close all;
+Fs = 4*125e6;
+Ts = 1/Fs;
+Npoints = 100e3;
+TBscale = Npoints*Ts;
+
 addpath('..\Test_signals\', '..\DG_waveform_generator\', '..\MSO_oscilloscope\', '..\TF_waveform_generator');
 
 
@@ -66,12 +71,31 @@ channel_num = 1;
 
 tic
 
-[rr, t] = MSO.read_raw_ascii(osci_conn_ID, channel_num, 100e3);
+[rr, t] = MSO.read_raw_ascii(osci_conn_ID, channel_num, 1e6);
+
+% return;
 splitted = split(rr, ',');
 
 
-
-
+% test_string = 'fd.x11.6115.13123, 192.168.2.0, 192.315.11, 1.13.b.4., 192.168.4.0.';
+% reg_expression = '(\d{1,3}\.){3}\d{1,3}';
+% m2 = regexp(test_string, reg_expression, 'match')
+% 
+% 
+% test_string2 = '<tag>Tarzan</tag> likes <tag>Jane</tag>';
+% reg_expression2 = '<tag>.*</tag>';
+% m3 = regexp(test_string2, reg_expression2, 'match')
+% 
+% 
+% test_string3 = 'He said bluntly "that is what she said!" and winked clarly';
+% reg_expression3 = '".*"';
+% m4 = regexp(test_string3, reg_expression3, 'match')
+% 
+% 
+% 
+% test_string4 = 'He said bluntly "that is Awhat she said!" and winked clarly';
+% reg_expression4 = '".*"';
+% m5 = regexp(test_string4, reg_expression4, 'match')
 
 
 t1 = toc;
@@ -95,3 +119,26 @@ figure;
 
 t3 = toc;
 disp(['plot elapsed time ', num2str(t3 - t2), ' seconds']);
+
+
+%% READ BYTES
+
+
+clc; close all; clearvars;
+Fs = 4*125e6;
+Ts = 1/Fs;
+Npoints = 100e3;
+TBscale = Npoints*Ts;
+
+addpath('..\Test_signals\', '..\DG_waveform_generator\', '..\MSO_oscilloscope\', '..\TF_waveform_generator');
+
+
+osci_conn_ID = 'USB0::0x1AB1::0x0515::MS5A244909354::0::INSTR';
+channel_num = 1;
+
+
+
+[rr, t] = MSO.read_raw_bytes(osci_conn_ID, channel_num, 1e6);
+
+figure;
+    plot(rr);
