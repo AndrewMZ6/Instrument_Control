@@ -15,6 +15,8 @@ classdef DSOX
             instr_obj = DSOX.visadev_connect(connectionID);            
             command = [':MEASure:VRMS? DISPlay,AC,CHANnel', num2str(chNum)];
             rms = writeread(instr_obj, command);
+            errors = writeread(instr_obj, 'SYS:ERR?');
+            disp(['get_rms errors -> ', errors]);
         end
 
         function rms = get_voltage_DC(connectionID, chNum)
@@ -28,6 +30,8 @@ classdef DSOX
             instr_obj = DSOX.visadev_connect(connectionID);
             command = ':MEASure:DELay? CHANnel1,CHANnel2';
             delay = writeread(instr_obj, command);
+            errors = writeread(instr_obj, 'SYS:ERR?');
+            disp(['get_delay errors -> ', errors]);
         end
 
         function phase = get_phase(connectionID)
@@ -41,6 +45,8 @@ classdef DSOX
             instr_obj = DSOX.visadev_connect(connectionID);            
             command = [':TIMebase:RANGe ', num2str(tb)];
             write(instr_obj, command);
+            errors = writeread(instr_obj, 'SYS:ERR?');
+            disp(['get_delay errors -> ', errors]);
         end
 
         function vmax = get_vmax(connID, chNum)
