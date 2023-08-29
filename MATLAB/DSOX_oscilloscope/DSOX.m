@@ -12,12 +12,27 @@ classdef DSOX
         end
 
         function rms = get_rms(connectionID, chNum)
-            instr_obj = DSOX.visadev_connect(connectionID);            
-            command = [':MEAS:VRMS? DISP,AC,CHAN', num2str(chNum)];
-            rms = writeread(instr_obj, command);
-            write(instr_obj, '*WAI');
-            errors = writeread(instr_obj, 'SYST:ERR?');
-            disp(['get_rms errors -> ', errors]);
+
+            iteration_count = 0;
+            while iteration_count < 5
+                iteration_count = iteration_count + 1;
+                disp(['iteration #', num2str(iteration_count)]);
+                try 
+                    
+    
+                    instr_obj = DSOX.visadev_connect(connectionID);            
+                    command = [':MEAS:VRMS? DISP,AC,CHAN', num2str(chNum)];
+                    rms = writeread(instr_obj, command);
+                    write(instr_obj, '*WAI');
+                    errors = writeread(instr_obj, 'SYST:ERR?');
+                    disp(['get_rms errors -> ', errors]);
+
+                catch err
+
+                    disp(['get_rms CATCH error -> ', err.message]);
+                end
+
+            end
         end
 
         function rms = get_voltage_DC(connectionID, chNum)
@@ -28,12 +43,26 @@ classdef DSOX
         end
 
         function delay = get_delay(connectionID)
-            instr_obj = DSOX.visadev_connect(connectionID);
-            command = ':MEAS:DEL? CHAN1,CHAN2';
-            delay = writeread(instr_obj, command);
-            write(instr_obj, '*WAI');
-            errors = writeread(instr_obj, 'SYST:ERR?');
-            disp(['get_delay errors -> ', errors]);
+
+            iteration_count = 0;
+            while iteration_count < 5
+                iteration_count = iteration_count + 1;
+                disp(['iteration #', num2str(iteration_count)]);
+                try 
+                    
+    
+                    instr_obj = DSOX.visadev_connect(connectionID);
+                    command = ':MEAS:DEL? CHAN1,CHAN2';
+                    delay = writeread(instr_obj, command);
+                    write(instr_obj, '*WAI');
+                    errors = writeread(instr_obj, 'SYST:ERR?');
+                    disp(['get_delay errors -> ', errors]);
+                catch err
+
+                    disp(['get_rms CATCH error -> ', err.message]);
+                end
+
+            end
         end
 
         function phase = get_phase(connectionID)
@@ -44,12 +73,25 @@ classdef DSOX
 
 
         function set_razvertka(connectionID, tb)
-            instr_obj = DSOX.visadev_connect(connectionID);            
-            command = [':TIM:RANG ', num2str(tb)];
-            write(instr_obj, command);
-            write(instr_obj, '*WAI');
-            errors = writeread(instr_obj, 'SYST:ERR?');
-            disp(['set_razvertka errors -> ', errors]);
+            iteration_count = 0;
+            while iteration_count < 5
+                iteration_count = iteration_count + 1;
+                disp(['iteration #', num2str(iteration_count)]);
+                try 
+
+                    instr_obj = DSOX.visadev_connect(connectionID);            
+                    command = [':TIM:RANG ', num2str(tb)];
+                    write(instr_obj, command);
+                    write(instr_obj, '*WAI');
+                    errors = writeread(instr_obj, 'SYST:ERR?');
+                    disp(['set_razvertka errors -> ', errors]);
+
+                catch err
+
+                    disp(['get_rms CATCH error -> ', err.message]);
+                end
+
+            end
         end
 
         function vmax = get_vmax(connID, chNum)
