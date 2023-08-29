@@ -15,6 +15,7 @@ classdef DSOX
             instr_obj = DSOX.visadev_connect(connectionID);            
             command = [':MEASure:VRMS? DISPlay,AC,CHANnel', num2str(chNum)];
             rms = writeread(instr_obj, command);
+            write(instr_obj, '*WAI');
             errors = writeread(instr_obj, 'SYST:ERR?');
             disp(['get_rms errors -> ', errors]);
         end
@@ -30,6 +31,7 @@ classdef DSOX
             instr_obj = DSOX.visadev_connect(connectionID);
             command = ':MEASure:DELay? CHANnel1,CHANnel2';
             delay = writeread(instr_obj, command);
+            write(instr_obj, '*WAI');
             errors = writeread(instr_obj, 'SYST:ERR?');
             disp(['get_delay errors -> ', errors]);
         end
@@ -45,6 +47,7 @@ classdef DSOX
             instr_obj = DSOX.visadev_connect(connectionID);            
             command = [':TIMebase:RANGe ', num2str(tb)];
             write(instr_obj, command);
+            write(instr_obj, '*WAI');
             errors = writeread(instr_obj, 'SYST:ERR?');
             disp(['set_razvertka errors -> ', errors]);
         end
