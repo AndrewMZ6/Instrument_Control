@@ -46,7 +46,7 @@ classdef DSOX
             command = [':TIMebase:RANGe ', num2str(tb)];
             write(instr_obj, command);
             errors = writeread(instr_obj, 'SYS:ERR?');
-            disp(['get_delay errors -> ', errors]);
+            disp(['set_razvertka errors -> ', errors]);
         end
 
         function vmax = get_vmax(connID, chNum)
