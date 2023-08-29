@@ -35,7 +35,7 @@ osci_conn_ID = 'USB0::0x1AB1::0x0515::MS5A244909354::0::INSTR';
 
 channel_num = 1;
 % read data in raw mode. The mode allows max of internal instrument memory depth points to load
-oscilloscope_data = MSO.read_data(osci_conn_ID, channel_num, signal.Fs);
+oscilloscope_data = MSO.read_data(osci_conn_ID, channel_num, 125e6);
 
 figure;
     plot(oscilloscope_data);
@@ -71,7 +71,7 @@ channel_num = 1;
 
 tic
 
-[rr, t] = MSO.read_raw_ascii(osci_conn_ID, channel_num, 1e6);
+[rr, t] = MSO.read_raw_ascii(osci_conn_ID, channel_num, 100e3);
 
 % return;
 splitted = split(rr, ',');
@@ -138,7 +138,7 @@ channel_num = 1;
 
 
 
-[rr, t] = MSO.read_raw_bytes(osci_conn_ID, channel_num, 1e6);
+[rr, t, data] = MSO.read_raw_bytes_fs(osci_conn_ID, channel_num, 2e6, 100e6);
 
 figure;
     plot(rr);

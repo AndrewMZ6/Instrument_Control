@@ -18,6 +18,50 @@ classdef MSO < handle
             
         end
 
+        function is_fs_mso_available(fs)
+            
+            fs_arr = [8e9, 4e9, 2e9, 1e9, 500e6, 200e6, ...
+                        100e6, 50e6, 20e6, 10e6, 5e6, 2e6, 1e6];
+
+            if ~ismember(fs, fs_arr)
+                error(['The Fs you entered is not avalable on MSO oscilloscope. List of available Fs: ', ...
+                    '8e9, 4e9, 2e9, 1e9, 500e6, 200e6, 100e6, 50e6, 20e6, 10e6, 5e6, 2e6, 1e6']);
+            end
+
+        end
+
+        function [points_str, points_num] = get_available_points(Npoints)
+            % Npoints - number of points to be read asked by user
+
+
+            arr_keys = [1e3, 10e3, 100e3, 1e6, 10e6, 25e6, 50e6, 100e6];
+            arr_vals = {'1k', '10k', '100k', '1M', '10M', '25M', '50M', '100M'};
+            M = containers.Map(arr_keys, arr_vals);
+
+           available_points = [1e3, 10e3, 100e3, 1e6, 10e6, 25e6, 50e6, 100e6];
+           temp = available_points(available_points >= Npoints);
+
+           if isempty(temp)
+              
+               error(['The number of points you entered is too large. Available points number: ', ...
+                   '1e3, 10e3, 100e3, 1e6, 10e6, 25e6, 50e6, 100e6'])
+              
+           end
+
+
+           points_num = temp(1);
+           points_str = M(temp(1));
+
+        end
+
+        function time_scale = calculate_timescale(fs, Npoints)
+            
+            Ts = 1/fs;
+            T_screen = Ts*Npoints;
+            time_scale = T_screen/10;
+
+        end
+
 
         function preambula_struct = create_preambula_struct(preambula)
             
@@ -25,6 +69,8 @@ classdef MSO < handle
             % so first of all split the values by ','
             split_preambula = split(preambula, ',');
 
+            % make structure "preambula" where value and description is
+            % stored for every field
             preambula_struct.format.value = str2num(split_preambula(1));
             preambula_struct.format.description = '<format>: indicates 0 (BYTE), 1 (WORD), or 2 (ASC).';
 
@@ -378,7 +424,7 @@ classdef MSO < handle
 
         end
 
-        function [revived_sig, timeline] = read_raw_bytes(connectionID, ch_num, points)
+        function [revived_sig, timeline, data] = read_raw_bytes(connectionID, ch_num, points)
 
 
             % connect to the instrument
@@ -428,8 +474,90 @@ classdef MSO < handle
                         
                         [revived_sig, preambula] = MSO.process_acquired_data(data, pre);
                         read_success_flag = 1;
-%                         revived_sig = 0;
-%                         preambula = 0;
+                        
+                      
+                        
+    
+                    catch err
+                
+
+                        disp(['catched error read_data_raw: ', err.message]);
+                        disp(['iteration #', num2str(iteration_count)]);
+
+                    end
+
+                else
+                    revived_sig = 0;
+                    preambula = 0;
+                    break;
+                end
+
+
+            end
+
+
+        end
+
+        function [revived_sig, timeline, data] = read_raw_bytes_fs(connectionID, ch_num, points, fs)
+
+            MSO.is_fs_mso_available(fs);
+            [pts_str, pts_num] = MSO.get_available_points(points);
+
+
+            % connect to the instrument
+            instr_object = MSO.connect_visadev(connectionID);
+            
+            instr_name = writeread(instr_object, '*IDN?');
+            disp(['mso -> connected to ', instr_name]);
+
+            tscale = MSO.calculate_timescale(fs, pts_num);
+
+            % set points number and timescale
+            write(instr_object, [':ACQ:MDEP ', pts_str]);
+            write(instr_object, [':TIM:SCAL ', num2str(tscale)]);
+
+
+
+            read_success_flag = 0;
+            iteration_count = 0;
+
+            while ~read_success_flag
+                if iteration_count < 50
+                    try
+                        iteration_count = iteration_count + 1;
+                
+                        % set the acquirance regime
+                        write(instr_object, ':STOP');
+                        write(instr_object, [':WAV:SOUR CHAN', num2str(ch_num)]);
+                        write(instr_object, ':WAV:MODE RAW');
+                        write(instr_object, [':WAV:POINts ', num2str(points)]);
+
+                        write(instr_object, ':WAV:FORM BYTE');
+                        
+                        
+                        % acquire preambula
+                        pre = writeread(instr_object, ':WAV:PRE?');
+                        
+                        % acquire data
+%                         write(instr_object, ':WAV:DATA?');
+%                         write(instr_object, ':RUN');
+                        preambula_struct = MSO.create_preambula_struct(pre);
+                        temp = 0:preambula_struct.points.value;
+                        timeline = temp*preambula_struct.xincrement.value;
+                        
+                        write(instr_object, ':WAV:DATA?');
+                        write(instr_object, '*WAI');
+                        data = readbinblock(instr_object, 'uint8');
+                        disp(['readbinblock length = ', num2str(length(data))]);
+    %                     
+    %                     % check for system errors
+                        errs = writeread(instr_object, ':SYST:ERR?');
+                        write(instr_object, ':RUN');
+                        
+                        disp(['mso -> errors: ' , errs]);
+                        
+                        [revived_sig, preambula] = MSO.process_acquired_data(data, pre);
+                        read_success_flag = 1;
                         
                       
                         
