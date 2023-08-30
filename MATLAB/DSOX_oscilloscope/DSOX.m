@@ -11,10 +11,86 @@ classdef DSOX
             instr_obj = visadev(connectionID);
         end
 
-        function rms = get_rms(connectionID, chNum)
-            instr_obj = DSOX.visadev_connect(connectionID);            
-            command = [':MEASure:VRMS? DISPlay,AC,CHANnel', num2str(chNum)];
-            rms = writeread(instr_obj, command);
+
+        function result = get_command(instr, command)
+
+            iteration_count = 0;
+            flag = 0;
+
+            while ~flag
+                if iteration_count < 5
+                    iteration_count = iteration_count + 1;
+%                     disp(['iteration #', num2str(iteration_count)]);
+
+                    try 
+                        
+        
+%                         disp(['executing command > ', command]);
+                        result = writeread(instr, command);
+                        write(instr, '*WAI');
+                        errors = writeread(instr, 'SYST:ERR?');
+%                         disp(['get_command error > ', errors]);
+                        flag = 1;
+    
+                    catch err
+    
+%                         disp(['get_comma CATCH error -> ', err.message]);
+                    end
+
+                else
+
+                    disp(['5 ITERATIONS PASSED: ', command, ' failed!']);
+                    flag = 1;
+                    break;
+         
+                end
+
+            end
+
+        end
+
+
+        function do_command(instr, command)
+
+            iteration_count = 0;
+            flag = 0;
+
+            while ~flag
+                if iteration_count < 5
+                    iteration_count = iteration_count + 1;
+%                     disp(['iteration #', num2str(iteration_count)]);
+
+                    try 
+%                         disp(['executing command > ', command]);
+                        write(instr, command);
+                        write(instr, '*WAI');
+                        errors = writeread(instr, 'SYST:ERR?');
+%                         disp(['get_rms errors -> ', errors]);
+                        flag = 1;
+    
+                    catch err
+    
+%                         disp(['get_rms CATCH error -> ', err.message]);
+                    end
+
+                else
+
+                    disp(['5 ITERATIONS PASSED: ', command, ' failed!']);
+                    flag = 1;
+                    break;
+         
+                end
+
+            end
+
+        end
+
+        function rms = get_rms(chNum, instr_obj)
+
+                    
+            command = [':MEAS:VRMS? DISP,AC,CHAN', num2str(chNum)];
+            rms = DSOX.get_command(instr_obj, command);
+            
         end
 
         function rms = get_voltage_DC(connectionID, chNum)
@@ -24,23 +100,26 @@ classdef DSOX
             rms = str2num(rms);
         end
 
-        function delay = get_delay(connectionID)
-            instr_obj = DSOX.visadev_connect(connectionID);
-            command = ':MEASure:DELay? CHANnel1,CHANnel2';
-            delay = writeread(instr_obj, command);
+        function delay = get_delay(instr_obj)
+
+            command = ':MEAS:DEL? CHAN1,CHAN2';
+            delay = DSOX.get_command(instr_obj, command);
+            
         end
 
-        function phase = get_phase(connectionID)
-            instr_obj = DSOX.visadev_connect(connectionID);
+        function phase = get_phase(instr)
+            
             command = ':MEASure:PHASe? CHANnel1,CHANnel2';
-            phase = writeread(instr_obj, command);
+            phase = DSOX.get_command(instr, command);
+
         end
 
 
-        function set_razvertka(connectionID, tb)
-            instr_obj = DSOX.visadev_connect(connectionID);            
-            command = [':TIMebase:RANGe ', num2str(tb)];
-            write(instr_obj, command);
+        function set_razvertka(instr_obj, tb)
+            
+            command = [':TIM:RANG ', num2str(tb)];
+            DSOX.do_command(instr_obj, command);
+    
         end
 
         function vmax = get_vmax(connID, chNum)

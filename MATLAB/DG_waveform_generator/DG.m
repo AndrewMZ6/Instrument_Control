@@ -25,8 +25,9 @@ classdef DG
         end
 
         function instr_object = connect_visadev(connectionID)
-            instr_object = visadev(connectionID);
-            instr_object.Timeout = 10;
+             
+                instr_object = visadev(connectionID);
+                        
         end
 
         function load_data(connID, data, fs, amp)

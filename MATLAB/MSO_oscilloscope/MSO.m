@@ -12,9 +12,17 @@ classdef MSO < handle
 
     methods (Static)
         function instr_object = connect_visadev(connectionID)
-
-            instr_object = visadev(connectionID);
-            instr_object.Timeout = 10;
+            
+            try
+                instr_object = visadev(connectionID);
+                instr_object.Timeout = 10;
+            catch err
+                dsip(err.message)
+                if strcmp(err.message, 'Resource string is invalid or resource was not found.')
+                    warning('Инструмент выключен D:');
+                    
+                end
+            end
             
         end
 
