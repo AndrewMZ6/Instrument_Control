@@ -20,21 +20,21 @@ classdef DSOX
             while ~flag
                 if iteration_count < 5
                     iteration_count = iteration_count + 1;
-                    disp(['iteration #', num2str(iteration_count)]);
+%                     disp(['iteration #', num2str(iteration_count)]);
 
                     try 
                         
         
-                        disp(['executing command > ', command]);
+%                         disp(['executing command > ', command]);
                         result = writeread(instr, command);
                         write(instr, '*WAI');
                         errors = writeread(instr, 'SYST:ERR?');
-                        disp(['get_rms errors -> ', errors]);
+%                         disp(['get_command error > ', errors]);
                         flag = 1;
     
                     catch err
     
-                        disp(['get_rms CATCH error -> ', err.message]);
+%                         disp(['get_comma CATCH error -> ', err.message]);
                     end
 
                 else
@@ -58,19 +58,19 @@ classdef DSOX
             while ~flag
                 if iteration_count < 5
                     iteration_count = iteration_count + 1;
-                    disp(['iteration #', num2str(iteration_count)]);
+%                     disp(['iteration #', num2str(iteration_count)]);
 
                     try 
-                        disp(['executing command > ', command]);
+%                         disp(['executing command > ', command]);
                         write(instr, command);
                         write(instr, '*WAI');
                         errors = writeread(instr, 'SYST:ERR?');
-                        disp(['get_rms errors -> ', errors]);
+%                         disp(['get_rms errors -> ', errors]);
                         flag = 1;
     
                     catch err
     
-                        disp(['get_rms CATCH error -> ', err.message]);
+%                         disp(['get_rms CATCH error -> ', err.message]);
                     end
 
                 else

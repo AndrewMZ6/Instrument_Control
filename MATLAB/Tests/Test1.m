@@ -21,7 +21,7 @@ figure;
     ylabel('Амплитуда');
 
 
-dg_conn_ID = 'USB0::0x1AB1::0x0640::DG5S244900056::0::INSTR';
+dg_conn_ID = 'USB0::0x1AB1::0x0640::DG5S245900056::0::INSTR';
 data_to_load = signal.data;
 
 
