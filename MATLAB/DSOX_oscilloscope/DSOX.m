@@ -11,7 +11,7 @@ classdef DSOX
             instr_obj = visadev(connectionID);
         end
 
-        function rms = get_rms(connectionID, chNum)
+        function rms = get_rms(chNum, instr_obj)
 
             iteration_count = 0;
             while iteration_count < 5
@@ -20,7 +20,7 @@ classdef DSOX
                 try 
                     
     
-                    instr_obj = DSOX.visadev_connect(connectionID);            
+%                     instr_obj = DSOX.visadev_connect(connectionID);            
                     command = [':MEAS:VRMS? DISP,AC,CHAN', num2str(chNum)];
                     rms = writeread(instr_obj, command);
                     write(instr_obj, '*WAI');
@@ -42,7 +42,7 @@ classdef DSOX
             rms = str2num(rms);
         end
 
-        function delay = get_delay(connectionID)
+        function delay = get_delay(instr_obj)
 
             iteration_count = 0;
             while iteration_count < 5
@@ -51,7 +51,7 @@ classdef DSOX
                 try 
                     
     
-                    instr_obj = DSOX.visadev_connect(connectionID);
+%                     instr_obj = DSOX.visadev_connect(connectionID);
                     command = ':MEAS:DEL? CHAN1,CHAN2';
                     delay = writeread(instr_obj, command);
                     write(instr_obj, '*WAI');
@@ -72,14 +72,14 @@ classdef DSOX
         end
 
 
-        function set_razvertka(connectionID, tb)
+        function set_razvertka(instr_obj, tb)
             iteration_count = 0;
             while iteration_count < 5
                 iteration_count = iteration_count + 1;
                 disp(['iteration #', num2str(iteration_count)]);
                 try 
 
-                    instr_obj = DSOX.visadev_connect(connectionID);            
+%                     instr_obj = DSOX.visadev_connect(connectionID);            
                     command = [':TIM:RANG ', num2str(tb)];
                     write(instr_obj, command);
                     write(instr_obj, '*WAI');
