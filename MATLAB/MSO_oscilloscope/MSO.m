@@ -20,6 +20,7 @@ classdef MSO < handle
                 dsip(err.message)
                 if strcmp(err.message, 'Resource string is invalid or resource was not found.')
                     warning('Инструмент выключен D:');
+                    
                 end
             end
             

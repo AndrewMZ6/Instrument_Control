@@ -25,21 +25,9 @@ classdef DG
         end
 
         function instr_object = connect_visadev(connectionID)
-
-             try
+             
                 instr_object = visadev(connectionID);
-                
-            catch err
-                disp(['asdadasdasdasdasdasdasd > ', err.message])
-                TF = strcmp(err.message, 'Resource string is invalid or resource was not found')
-                    warning('Инструмент выключен D:');
-                    disp('LAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA')
-                
-            end
-%             instr_object = visadev(connectionID);
-%             instr_object.Timeout = 10;
-            instr_object.Timeout = 10;
-            exit()
+                        
         end
 
         function load_data(connID, data, fs, amp)
