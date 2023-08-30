@@ -11,22 +11,25 @@ classdef DSOX
             instr_obj = visadev(connectionID);
         end
 
-        function rms = get_rms(chNum, instr_obj)
+
+        function result = do_command(instr, command)
 
             iteration_count = 0;
             flag = 0;
+
             while ~flag
                 if iteration_count < 5
                     iteration_count = iteration_count + 1;
                     disp(['iteration #', num2str(iteration_count)]);
+
                     try 
                         
         
     %                     instr_obj = DSOX.visadev_connect(connectionID);            
-                        command = [':MEAS:VRMS? DISP,AC,CHAN', num2str(chNum)];
-                        rms = writeread(instr_obj, command);
-                        write(instr_obj, '*WAI');
-                        errors = writeread(instr_obj, 'SYST:ERR?');
+%                         command = [':MEAS:VRMS? DISP,AC,CHAN', num2str(chNum)];
+                        result = writeread(instr, command);
+                        write(instr, '*WAI');
+                        errors = writeread(instr, 'SYST:ERR?');
                         disp(['get_rms errors -> ', errors]);
                         flag = 1;
     
@@ -34,9 +37,25 @@ classdef DSOX
     
                         disp(['get_rms CATCH error -> ', err.message]);
                     end
+
+                else
+
+                    disp(['5 ITERATIONS PASSED: ', command, ' failed!']);
+                    flag = 1;
+                    break;
+         
                 end
 
             end
+
+        end
+
+        function rms = get_rms(chNum, instr_obj)
+
+                    
+            command = [':MEAS:VRMS? DISP,AC,CHAN', num2str(chNum)];
+            rms = DSOX.do_command(instr_obj, command);
+            
         end
 
         function rms = get_voltage_DC(connectionID, chNum)
@@ -48,28 +67,9 @@ classdef DSOX
 
         function delay = get_delay(instr_obj)
 
-            iteration_count = 0;
-            flag = 0;
-            while ~flag
-                if iteration_count < 5
-                    iteration_count = iteration_count + 1;
-                    disp(['iteration #', num2str(iteration_count)]);
-                    try 
-                        
-        
-    %                     instr_obj = DSOX.visadev_connect(connectionID);
-                        command = ':MEAS:DEL? CHAN1,CHAN2';
-                        delay = writeread(instr_obj, command);
-                        write(instr_obj, '*WAI');
-                        errors = writeread(instr_obj, 'SYST:ERR?');
-                        disp(['get_delay errors -> ', errors]);
-                    catch err
-    
-                        disp(['get_rms CATCH error -> ', err.message]);
-                    end
-                end
-
-            end
+            command = ':MEAS:DEL? CHAN1,CHAN2';
+            delay = DSOX.do_command(instr_obj, command);
+            
         end
 
         function phase = get_phase(connectionID)
@@ -80,27 +80,13 @@ classdef DSOX
 
 
         function set_razvertka(instr_obj, tb)
-            iteration_count = 0;
-            flag = 0;
-            while ~flag
-                if iteration_count < 5
-                    iteration_count = iteration_count + 1;
-                    disp(['iteration #', num2str(iteration_count)]);
-                    try 
+            
+            command = [':TIM:RANG ', num2str(tb)];
+            write(instr_obj, command);
+            write(instr_obj, '*WAI');
+            errors = writeread(instr_obj, 'SYST:ERR?');
+            disp(['set_razvertka errors -> ', errors]);
     
-    %                     instr_obj = DSOX.visadev_connect(connectionID);            
-                        command = [':TIM:RANG ', num2str(tb)];
-                        write(instr_obj, command);
-                        write(instr_obj, '*WAI');
-                        errors = writeread(instr_obj, 'SYST:ERR?');
-                        disp(['set_razvertka errors -> ', errors]);
-    
-                    catch err
-    
-                        disp(['get_rms CATCH error -> ', err.message]);
-                    end
-                end
-            end
         end
 
         function vmax = get_vmax(connID, chNum)
