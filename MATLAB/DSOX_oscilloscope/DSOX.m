@@ -107,10 +107,11 @@ classdef DSOX
             
         end
 
-        function phase = get_phase(connectionID)
-            instr_obj = DSOX.visadev_connect(connectionID);
+        function phase = get_phase(instr)
+            
             command = ':MEASure:PHASe? CHANnel1,CHANnel2';
-            phase = writeread(instr_obj, command);
+            phase = DSOX.get_command(instr, command);
+
         end
 
 
