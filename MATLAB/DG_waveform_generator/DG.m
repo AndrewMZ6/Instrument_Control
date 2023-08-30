@@ -40,8 +40,7 @@ classdef DG
                 Fs_instr = DG.M(fs);
             catch ME
                 if (strcmp(ME.identifier, 'MATLAB:Containers:Map:NoKey'))
-                    warning('Generator sampling frequency can only be 25 MHz or 125 MHz');
-                    return;
+                    error('Generator sampling frequency can only be 25 MHz or 125 MHz');                    
                 end
             end
 
