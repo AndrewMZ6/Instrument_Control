@@ -12,7 +12,7 @@ classdef DSOX
         end
 
 
-        function result = do_command(instr, command)
+        function result = get_command(instr, command)
 
             iteration_count = 0;
             flag = 0;
@@ -25,9 +25,44 @@ classdef DSOX
                     try 
                         
         
-    %                     instr_obj = DSOX.visadev_connect(connectionID);            
-%                         command = [':MEAS:VRMS? DISP,AC,CHAN', num2str(chNum)];
+                        disp(['executing command > ', command]);
                         result = writeread(instr, command);
+                        write(instr, '*WAI');
+                        errors = writeread(instr, 'SYST:ERR?');
+                        disp(['get_rms errors -> ', errors]);
+                        flag = 1;
+    
+                    catch err
+    
+                        disp(['get_rms CATCH error -> ', err.message]);
+                    end
+
+                else
+
+                    disp(['5 ITERATIONS PASSED: ', command, ' failed!']);
+                    flag = 1;
+                    break;
+         
+                end
+
+            end
+
+        end
+
+
+        function do_command(instr, command)
+
+            iteration_count = 0;
+            flag = 0;
+
+            while ~flag
+                if iteration_count < 5
+                    iteration_count = iteration_count + 1;
+                    disp(['iteration #', num2str(iteration_count)]);
+
+                    try 
+                        disp(['executing command > ', command]);
+                        write(instr, command);
                         write(instr, '*WAI');
                         errors = writeread(instr, 'SYST:ERR?');
                         disp(['get_rms errors -> ', errors]);
@@ -54,7 +89,7 @@ classdef DSOX
 
                     
             command = [':MEAS:VRMS? DISP,AC,CHAN', num2str(chNum)];
-            rms = DSOX.do_command(instr_obj, command);
+            rms = DSOX.get_command(instr_obj, command);
             
         end
 
@@ -68,7 +103,7 @@ classdef DSOX
         function delay = get_delay(instr_obj)
 
             command = ':MEAS:DEL? CHAN1,CHAN2';
-            delay = DSOX.do_command(instr_obj, command);
+            delay = DSOX.get_command(instr_obj, command);
             
         end
 
@@ -82,10 +117,7 @@ classdef DSOX
         function set_razvertka(instr_obj, tb)
             
             command = [':TIM:RANG ', num2str(tb)];
-            write(instr_obj, command);
-            write(instr_obj, '*WAI');
-            errors = writeread(instr_obj, 'SYST:ERR?');
-            disp(['set_razvertka errors -> ', errors]);
+            DSOX.do_command(instr_obj, command);
     
         end
 
