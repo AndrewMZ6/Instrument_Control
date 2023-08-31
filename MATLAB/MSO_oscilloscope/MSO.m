@@ -32,7 +32,8 @@ classdef MSO < handle
                         100e6, 50e6, 20e6, 10e6, 5e6, 2e6, 1e6];
 
             if ~ismember(fs, fs_arr)
-                error(['The Fs you entered is not avalable on MSO oscilloscope. List of available Fs: ', ...
+                error('MSO:NotavailableFrequencyError', ...
+                    ['The Fs you entered is not avalable on MSO oscilloscope. List of available Fs: ', ...
                     '8e9, 4e9, 2e9, 1e9, 500e6, 200e6, 100e6, 50e6, 20e6, 10e6, 5e6, 2e6, 1e6']);
             end
 
@@ -51,7 +52,8 @@ classdef MSO < handle
 
            if isempty(temp)
               
-               error(['The number of points you entered is too large. Available points number: ', ...
+               error('MSO:NotavailablePointsNumError', ...
+                   ['The number of points you entered is too large. Available points number: ', ...
                    '1e3, 10e3, 100e3, 1e6, 10e6, 25e6, 50e6, 100e6'])
               
            end
@@ -116,7 +118,10 @@ classdef MSO < handle
             preambula_struct = MSO.create_preambula_struct(preambula);
 
             if (preambula_struct.points.value ~= length(data))
-                error('mso -> Read error: preambula.points != length(data)');
+                error('MSO:processAcquireDataError', ...
+                               ['Expected data length according to preambula = ', num2str(preambula_struct.points.value), ...
+                               '.Actual data length = ', num2str(length(data))]);
+                
             end
             
 
@@ -304,7 +309,6 @@ classdef MSO < handle
                             write(instr_object, '*WAI');
                             data = readbinblock(instr_object, 'uint8');
                             
-                            disp(['MSO DEBUG -> data length = ', num2str(length(data))]);
                             if (length(data) == 1)
                                 continue;
                             end
@@ -319,7 +323,6 @@ classdef MSO < handle
                             % check for system errors
                             errs = writeread(instr_object, ':SYST:ERR?');
                             srate = writeread(instr_object, ':ACQuire:SRATe?');
-                            disp(['MSO DEBUG -> SRATE = ', srate]);
                             write(instr_object, ':RUN');
                             read_success_flag = 1;
                             % display system errors
@@ -329,7 +332,7 @@ classdef MSO < handle
                             [revived_sig, preambula] = MSO.process_acquired_data(data, pre);
                             
                             
-                            decimate_coeff = str2num(srate)/fs_gen;   % 2e9 is oscilloscope sampling frequency
+                            decimate_coeff = str2double(srate)/fs_gen;   % 2e9 is oscilloscope sampling frequency
                             disp(['MSO DEBUG -> DECI COEFF = ', num2str(decimate_coeff)]);
 
 %                             decimated_sig = revived_sig(decimate_coeff:decimate_coeff:end);
@@ -506,81 +509,99 @@ classdef MSO < handle
 
         end
 
-        function [revived_sig, timeline, data] = read_raw_bytes_fs(connectionID, ch_num, points, fs)
+        function [revived_sig, oscilloscope_data] = read_raw_bytes_fs(connectionID, ch_num, points, fs)
 
+            % initial checks of available fs and available points
             MSO.is_fs_mso_available(fs);
             [pts_str, pts_num] = MSO.get_available_points(points);
 
 
+            % calculate oscilloscope display timescale
+            tscale = MSO.calculate_timescale(fs, pts_num);
+
+
             % connect to the instrument
             instr_object = MSO.connect_visadev(connectionID);
-            
             instr_name = writeread(instr_object, '*IDN?');
             disp(['mso -> connected to ', instr_name]);
 
-            tscale = MSO.calculate_timescale(fs, pts_num);
-
+            
             % set points number and timescale
             write(instr_object, [':ACQ:MDEP ', pts_str]);
             write(instr_object, [':TIM:SCAL ', num2str(tscale)]);
 
 
-
+            % create counters
             read_success_flag = 0;
             iteration_count = 0;
 
+
+            % main data acquisition loop
             while ~read_success_flag
-                if iteration_count < 50
+                if iteration_count < 3
                     try
                         iteration_count = iteration_count + 1;
+                        disp(['iteration #', num2str(iteration_count)]);
                 
                         % set the acquirance regime
                         write(instr_object, ':STOP');
                         write(instr_object, [':WAV:SOUR CHAN', num2str(ch_num)]);
                         write(instr_object, ':WAV:MODE RAW');
                         write(instr_object, [':WAV:POINts ', num2str(points)]);
-
                         write(instr_object, ':WAV:FORM BYTE');
                         
                         
                         % acquire preambula
                         pre = writeread(instr_object, ':WAV:PRE?');
-                        
-                        % acquire data
-%                         write(instr_object, ':WAV:DATA?');
-%                         write(instr_object, ':RUN');
                         preambula_struct = MSO.create_preambula_struct(pre);
+
+
+                        % create timeline axis for plotting aqcuired data: plot(timeline, aqcuired_data)
                         temp = 0:preambula_struct.points.value;
                         timeline = temp*preambula_struct.xincrement.value;
-                        
+
+
+                        % acquire data
                         write(instr_object, ':WAV:DATA?');
                         write(instr_object, '*WAI');
                         data = readbinblock(instr_object, 'uint8');
-                        disp(['readbinblock length = ', num2str(length(data))]);
-    %                     
-    %                     % check for system errors
+                        
+      
+                        % check for system errors
                         errs = writeread(instr_object, ':SYST:ERR?');
-                        write(instr_object, ':RUN');
-                        
+                        write(instr_object, ':RUN');                        
                         disp(['mso -> errors: ' , errs]);
-                        
+
+
+                        % process acquired data according to preambula data                        
                         [revived_sig, preambula] = MSO.process_acquired_data(data, pre);
+
+                        fs_instr = str2double(writeread(instr_object, ':ACQ:SRATe?'));
+                        
+                        if (fs_instr~=fs)
+                           error('MSO:unableToSetRequiredSampleRate', ...
+                               ['The combination of fs = ', num2str(fs), ' and points number = ', num2str(points), ' is uncalculatable!']);
+                            
+                        end
+                        
+                        % create "oscilloscope_data" struct with service data
+                        oscilloscope_data.timeline = timeline;
+                        oscilloscope_data.data = data;
+                        oscilloscope_data.fs_instr = fs_instr;
+                        oscilloscope_data.preambula = preambula;
+
+
                         read_success_flag = 1;
-                        
-                      
-                        
     
                     catch err
-                
-
-                        disp(['catched error read_data_raw: ', err.message]);
-                        disp(['iteration #', num2str(iteration_count)]);
-
+ 
+                        disp(['MSO::read_raw_bytes_fs ERROR: ', err.message]);
+ 
                     end
 
                 else
                     revived_sig = 0;
-                    preambula = 0;
+                    oscilloscope_data = 0;
                     break;
                 end
 
