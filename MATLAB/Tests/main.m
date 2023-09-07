@@ -137,7 +137,7 @@ addpath('..\Test_signals\', '..\DG_waveform_generator\', '..\MSO_oscilloscope\',
 osci_conn_ID = 'USB0::0x1AB1::0x0515::MS5A244909354::0::INSTR';
 channel_num = 1;
 
-for fs = 1
+
 fs = 100e6;
 points = 1899e6;
 
