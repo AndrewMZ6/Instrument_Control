@@ -10,3 +10,4 @@ dist/
 *.csv
 *.txt
 *.wav
+*.mat

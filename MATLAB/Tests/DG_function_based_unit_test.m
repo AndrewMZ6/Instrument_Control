@@ -17,7 +17,6 @@ end
 
 function test_two(testCase)
 
-    
     dg_conn_ID = 'USB0::0x1AB1::0x0640::DG5asdadS244900056::0::INSTR';
     DG.load_data(dg_conn_ID, [.1, .5], signal.Fs, amp);
 

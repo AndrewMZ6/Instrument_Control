@@ -8,6 +8,54 @@ classdef MSO < handle
     %   upload data to generator and send it to chosen channel. Set sample
     %   frequency
     
+    properties (Constant)
+        Mdepth_index =  [ 1,      2,       3,     4,       5,     6,     7,      8];
+        Mdepth_str =    {'1k',   '10k',  '100k', '1M',   '10M', '25M', '50M', '100M'};
+
+        Mem_depth_map = containers.Map(MSO.Mdepth_str, MSO.Mdepth_index);
+
+%         available_frequencies = [2e6, 5e6, 10e6, 20e6, 50e6, 100e6, 200e6, ...
+%                                   500e6, 1e9, 2e9, 4e9, 8e9];
+        available_frequencies_strings = {'2MHz', '5MHz', '10MHz', '20MHz', '50MHz', '100MHz', '200MHz', ...
+                                   '500MHz', '1GHz', '2GHz', '4GHz', '8GHz'};
+
+
+        Mdepth =    [1e3;   1e4;    1e5;    1e6;    1e7;    25e6;   50e6;   1e8];
+        fs_2MHz =   [30;    300;    3e3;    30e3;   300e3;  8e5;    12e5;   30e5]*1e-6;
+        fs_5MHz =   [15;    150;    15e2;   15e3;   150e3;  3e5;    8e5;    15e5]*1e-6;
+        fs_10MHz =  [7;     70;     7e2;    7e3;    70e3;   1.5e5;  3e5;    7e5]*1e-6;        
+        fs_20MHz =  [4;     40;     4e2;    4e3;    40e3;   70e3;   1.5e5;  4e5]*1e-6;
+        fs_50MHz =  [1.5;   15;     150;    1500;   15e3;   30e3;   80e3;   15e4]*1e-6;
+        fs_100MHz = [0.75;  7.5;    75;     750;    75e2;   15e3;   30e3;   75e3]*1e-6;
+        fs_200MHz = [0.3;   3;      30;     300;    3e3;    8e3;    15e3;   3e4]*1e-6;
+        fs_500MHz = [0.15;  1.5;    15;     150;    1500;   3e3;    8e3;    15e3]*1e-6;
+        fs_1GHz =   [7;     70;     7e2;    7e3;    7e4;    15e4;   3e5;    7e5]*1e-8;       % поменялась степень множителя
+        fs_2GHz =   [3.5;   35;     350;    35e2;   35e3;   8e4;    15e4;   35e4]*1e-8;
+        fs_4GHz =   [1.5;   15;     150;    1500;   15e3;   4e4;    8e4;    15e4]*1e-8;
+        fs_8GHz =   [0.7;    7;     70;     700;    7e3;    1e4;    4e4;    7e4]*1e-8;
+
+        available_fs = [MSO.fs_2MHz, MSO.fs_5MHz, MSO.fs_10MHz, MSO.fs_20MHz, MSO.fs_50MHz, ...
+                        MSO.fs_100MHz, MSO.fs_200MHz, MSO.fs_500MHz, MSO.fs_1GHz, MSO.fs_2GHz, MSO.fs_4GHz, MSO.fs_8GHz]
+
+        
+%         fs_map = containers.Map(MSO.available_frequencies, MSO.available_fs);
+
+
+        freq_table = table(MSO.Mdepth, MSO.fs_2MHz, MSO.fs_5MHz, MSO.fs_10MHz, MSO.fs_20MHz, MSO.fs_50MHz, ...
+                           MSO.fs_100MHz, MSO.fs_200MHz, MSO.fs_500MHz, MSO.fs_1GHz, MSO.fs_2GHz, MSO.fs_4GHz, MSO.fs_8GHz, ...
+                           'VariableNames', {'Mdepth', 'fs_2MHz', 'fs_5MHz', 'fs_10MHz', 'fs_20MHz', 'fs_50MHz', 'fs_100MHz', ...
+                           'fs_200MHz', 'fs_500MHz', 'fs_1GHz', 'fs_2GHz', 'fs_4GHz', 'fs_8GHz'});
+        
+        
+        available_frequencies = [2e6, 5e6, 10e6, 20e6, 50e6, 100e6, 200e6, ...
+                                   500e6, 1e9, 2e9, 4e9, 8e9];
+
+        available_frequencies_str = {'fs_2MHz', 'fs_5MHz', 'fs_10MHz', 'fs_20MHz', 'fs_50MHz', 'fs_100MHz', 'fs_200MHz', ...
+                                   'fs_500MHz', 'fs_1GHz', 'fs_2GHz', 'fs_4GHz', 'fs_8GHz'};
+
+        fs_table_name = containers.Map(MSO.available_frequencies, MSO.available_frequencies_str);
+
+    end
     
 
     methods (Static)
@@ -17,7 +65,7 @@ classdef MSO < handle
                 instr_object = visadev(connectionID);
                 instr_object.Timeout = 10;
             catch err
-                dsip(err.message)
+                disp(err.message)
                 if strcmp(err.message, 'Resource string is invalid or resource was not found.')
                     warning('Инструмент выключен D:');
                     
@@ -26,15 +74,47 @@ classdef MSO < handle
             
         end
 
+
+        function time_scale = get_timescale_from_table(fs, pts_num)
+
+            fs_str = MSO.get_fs_table_name(fs);
+            points_index = MSO.freq_table.Mdepth == pts_num;
+
+            time_scale = MSO.freq_table.(fs_str)(points_index);
+
+        end
+
+        function fs_string = get_fs_table_name(fs_num)
+
+            
+
+            available_frequencies_one_line = ['2MHz, 5MHz, 10MHz, 20MHz, 50MHz, 100MHz, 200MHz,', ...
+                                   '500MHz, 1GHz, 2GHz, 4GHz, 8GHz'];
+            
+            try
+                fs_string = MSO.fs_table_name(fs_num);
+            catch ME
+                if (strcmp(ME.identifier, 'MATLAB:Containers:Map:NoKey'))
+                    error('MSO:unavailableSamplingFrequencyError', ['Sampling Frequency you entered is not available for MSO oscilloscope. ' ...
+                        'List of available Fs: ', available_frequencies_one_line]);
+                end
+            end
+
+
+        end
+
         function is_fs_mso_available(fs)
             
             fs_arr = [8e9, 4e9, 2e9, 1e9, 500e6, 200e6, ...
                         100e6, 50e6, 20e6, 10e6, 5e6, 2e6, 1e6];
 
+            available_frequencies_one_line = ['2MHz, 5MHz, 10MHz, 20MHz, 50MHz, 100MHz, 200MHz,', ...
+                                   '500MHz, 1GHz, 2GHz, 4GHz, 8GHz'];
+
             if ~ismember(fs, fs_arr)
                 error('MSO:NotavailableFrequencyError', ...
-                    ['The Fs you entered is not avalable on MSO oscilloscope. List of available Fs: ', ...
-                    '8e9, 4e9, 2e9, 1e9, 500e6, 200e6, 100e6, 50e6, 20e6, 10e6, 5e6, 2e6, 1e6']);
+                    ['Sampling Frequency you entered is not available for MSO oscilloscope. ' ...
+                        'List of available Fs: ', available_frequencies_one_line]);
             end
 
         end
@@ -53,8 +133,8 @@ classdef MSO < handle
            if isempty(temp)
               
                error('MSO:NotavailablePointsNumError', ...
-                   ['The number of points you entered is too large. Available points number: ', ...
-                   '1e3, 10e3, 100e3, 1e6, 10e6, 25e6, 50e6, 100e6'])
+                   ['The number of points you entered is too large. Available points are ', ...
+                   '1 to 100M'])
               
            end
 
@@ -67,8 +147,10 @@ classdef MSO < handle
         function time_scale = calculate_timescale(fs, Npoints)
             
             Ts = 1/fs;
+            disp(['calculate_time_scale: fs = ', num2str(fs, '%e'), ' Npoints = ', num2str(Npoints, '%e')]);
             T_screen = Ts*Npoints;
             time_scale = T_screen/10;
+            disp(['calculated time_scale = ', num2str(time_scale, '%e')]);
 
         end
 
@@ -119,8 +201,8 @@ classdef MSO < handle
 
             if (preambula_struct.points.value ~= length(data))
                 error('MSO:processAcquireDataError', ...
-                               ['Expected data length according to preambula = ', num2str(preambula_struct.points.value), ...
-                               '.Actual data length = ', num2str(length(data))]);
+                               ['Expected data length according to preambula = ', num2str(preambula_struct.points.value, '%e'), ...
+                               '.Actual data length = ', num2str(length(data), '%e')]);
                 
             end
             
@@ -517,7 +599,8 @@ classdef MSO < handle
 
 
             % calculate oscilloscope display timescale
-            tscale = MSO.calculate_timescale(fs, pts_num);
+%             tscale = MSO.calculate_timescale(fs, pts_num);
+            tscale = MSO.get_timescale_from_table(fs, pts_num);
 
 
             % connect to the instrument
@@ -529,6 +612,8 @@ classdef MSO < handle
             % set points number and timescale
             write(instr_object, [':ACQ:MDEP ', pts_str]);
             write(instr_object, [':TIM:SCAL ', num2str(tscale)]);
+            
+            
 
 
             % create counters
@@ -572,17 +657,18 @@ classdef MSO < handle
                         write(instr_object, ':RUN');                        
                         disp(['mso -> errors: ' , errs]);
 
+                        if (preambula_struct.points.value ~= points)
+                            
+                            error('MSO:acquireDataPontsNumberError', ['Demaded ', num2str(points, '%e'), ' points' ...
+                                ', but got ', num2str(preambula_struct.points.value, '%e'), ' points'])
+                        end
+
 
                         % process acquired data according to preambula data                        
                         [revived_sig, preambula] = MSO.process_acquired_data(data, pre);
 
                         fs_instr = str2double(writeread(instr_object, ':ACQ:SRATe?'));
                         
-                        if (fs_instr~=fs)
-                           error('MSO:unableToSetRequiredSampleRate', ...
-                               ['The combination of fs = ', num2str(fs), ' and points number = ', num2str(points), ' is uncalculatable!']);
-                            
-                        end
                         
                         % create "oscilloscope_data" struct with service data
                         oscilloscope_data.timeline = timeline;
@@ -600,15 +686,35 @@ classdef MSO < handle
                     end
 
                 else
-                    revived_sig = 0;
-                    oscilloscope_data = 0;
-                    break;
+                    error('MSO:maximumIterationNumberError', 'Maximum iterations number is exceeded');                    
                 end
 
 
             end
 
 
+        end
+
+
+        function set_memdepth(instr_obj, md)
+
+            md_str = MSO.get_available_points(md);
+            command = [':ACQ:MDEP ', md_str];
+            write(instr_obj, command);
+
+        end
+
+
+        function set_timescale(instr_obj, tscale)
+
+            command = [':TIM:SCAL ', num2str(tscale)];
+            write(instr_obj, command);
+
+        end
+
+
+        function fs = get_current_Fs(instr_obj)
+            fs = str2double(writeread(instr_obj, ':ACQ:SRATe?'));
         end
 
     end

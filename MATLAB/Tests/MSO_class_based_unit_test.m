@@ -1,4 +1,7 @@
 classdef MSO_class_based_unit_test < matlab.unittest.TestCase
+    %Running tests commands:
+    %   table(runtests('MSO_class_based_unit_test')) - run all tests
+    %   
 
     properties
         osci_conn_ID
@@ -8,7 +11,8 @@ classdef MSO_class_based_unit_test < matlab.unittest.TestCase
     methods (TestClassSetup)
 
         function set_initial_parameters(testCase)
-            testCase.channel_num = 1;
+            addpath('..\Test_signals\', '..\DG_waveform_generator\', '..\MSO_oscilloscope\', '..\TF_waveform_generator');
+            testCase.channel_num = 2;
             testCase.osci_conn_ID = 'USB0::0x1AB1::0x0515::MS5A244909354::0::INSTR';
         end
 
@@ -54,7 +58,7 @@ classdef MSO_class_based_unit_test < matlab.unittest.TestCase
         function test_500MHz_fs(testCase)
 
             user_fs = 500e6;
-            user_numpoints = 1e6;
+            user_numpoints = 100e3;
             [~, oscilloscope_data] = MSO.read_raw_bytes_fs(testCase.osci_conn_ID, testCase.channel_num, user_numpoints, user_fs);
             testCase.verifyEqual(oscilloscope_data.fs_instr, user_fs);
 
@@ -133,7 +137,7 @@ classdef MSO_class_based_unit_test < matlab.unittest.TestCase
         function test_4GHz_fs(testCase)
 
             user_fs = 4e9;
-            user_numpoints = 10e3;
+            user_numpoints = 25e6;
             [~, oscilloscope_data] = MSO.read_raw_bytes_fs(testCase.osci_conn_ID, testCase.channel_num, user_numpoints, user_fs);
             testCase.verifyEqual(oscilloscope_data.fs_instr, user_fs);
 
@@ -179,6 +183,108 @@ classdef MSO_class_based_unit_test < matlab.unittest.TestCase
             testCase.verifyEqual(oscilloscope_data.fs_instr, user_fs);
 
         end
+
+
+        function test_1k_points(testCase)
+
+            user_fs = 100e6;
+            user_numpoints = 1e3;
+            [~, oscilloscope_data] = MSO.read_raw_bytes_fs(testCase.osci_conn_ID, testCase.channel_num, user_numpoints, user_fs);
+            testCase.verifyEqual(length(oscilloscope_data.data), user_numpoints);
+        end
+
+
+        function test_10k_points(testCase)
+
+            user_fs = 100e6;
+            user_numpoints = 8e3;
+            [~, oscilloscope_data] = MSO.read_raw_bytes_fs(testCase.osci_conn_ID, testCase.channel_num, user_numpoints, user_fs);
+            testCase.verifyEqual(length(oscilloscope_data.data), user_numpoints);
+
+        end
+
+
+        function test_100k_points(testCase)
+
+            user_fs = 100e6;
+            user_numpoints = 80e3;
+            [~, oscilloscope_data] = MSO.read_raw_bytes_fs(testCase.osci_conn_ID, testCase.channel_num, user_numpoints, user_fs);
+            testCase.verifyEqual(length(oscilloscope_data.data), user_numpoints);
+
+        end
+
+
+        function test_1M_points(testCase)
+
+            user_fs = 100e6;
+            user_numpoints = 0.8e6;
+            [~, oscilloscope_data] = MSO.read_raw_bytes_fs(testCase.osci_conn_ID, testCase.channel_num, user_numpoints, user_fs);
+            testCase.verifyEqual(length(oscilloscope_data.data), user_numpoints);
+
+        end
+
+
+        function test_10M_points(testCase)
+
+            user_fs = 100e6;
+            user_numpoints = 8e6;
+            [~, oscilloscope_data] = MSO.read_raw_bytes_fs(testCase.osci_conn_ID, testCase.channel_num, user_numpoints, user_fs);
+            testCase.verifyEqual(length(oscilloscope_data.data), user_numpoints);
+
+        end
+
+
+        function test_25M_points(testCase)
+
+            user_fs = 100e6;
+            user_numpoints = 22e6;
+            [~, oscilloscope_data] = MSO.read_raw_bytes_fs(testCase.osci_conn_ID, testCase.channel_num, user_numpoints, user_fs);
+            testCase.verifyEqual(length(oscilloscope_data.data), user_numpoints);
+
+        end
+
+
+        function test_50M_points(testCase)
+
+            user_fs = 100e6;
+            user_numpoints = 50e6;
+            [~, oscilloscope_data] = MSO.read_raw_bytes_fs(testCase.osci_conn_ID, testCase.channel_num, user_numpoints, user_fs);
+            testCase.verifyEqual(length(oscilloscope_data.data), user_numpoints);
+
+        end
+
+
+        function test_100M_points(testCase)
+
+            user_fs = 100e6;
+            user_numpoints = 100e6;
+            [~, oscilloscope_data] = MSO.read_raw_bytes_fs(testCase.osci_conn_ID, testCase.channel_num, user_numpoints, user_fs);
+            testCase.verifyEqual(length(oscilloscope_data.data), user_numpoints);
+
+        end
+
+        
+        function test_1_point(testCase)
+
+            user_fs = 100e6;
+            user_numpoints = 1;
+            [~, oscilloscope_data] = MSO.read_raw_bytes_fs(testCase.osci_conn_ID, testCase.channel_num, user_numpoints, user_fs);
+            testCase.verifyEqual(length(oscilloscope_data.data), user_numpoints);
+
+        end
+
+
+        function test_200M_points_not_available(testCase)
+
+            user_fs = 100e6;
+            user_numpoints = 200e6;
+            testCase.verifyError(@()MSO.read_raw_bytes_fs(testCase.osci_conn_ID, testCase.channel_num, user_numpoints, user_fs), ...
+                                'MSO:NotavailablePointsNumError');
+
+
+        end
+
+
 
     end
     
