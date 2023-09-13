@@ -602,16 +602,16 @@ classdef MSO < handle
 %             tscale = MSO.calculate_timescale(fs, pts_num);
             tscale = MSO.get_timescale_from_table(fs, pts_num);
 
-
             % connect to the instrument
             instr_object = MSO.connect_visadev(connectionID);
             instr_name = writeread(instr_object, '*IDN?');
             disp(['mso -> connected to ', instr_name]);
 
-            
+            write(instr_object, [':WAV:SOUR CHAN', num2str(ch_num)]);
             % set points number and timescale
             write(instr_object, [':ACQ:MDEP ', pts_str]);
             write(instr_object, [':TIM:SCAL ', num2str(tscale)]);
+            
             
             
 
@@ -623,7 +623,7 @@ classdef MSO < handle
 
             % main data acquisition loop
             while ~read_success_flag
-                if iteration_count < 3
+                if iteration_count < 5
                     try
                         iteration_count = iteration_count + 1;
                         disp(['iteration #', num2str(iteration_count)]);
@@ -634,7 +634,8 @@ classdef MSO < handle
                         write(instr_object, ':WAV:MODE RAW');
                         write(instr_object, [':WAV:POINts ', num2str(points)]);
                         write(instr_object, ':WAV:FORM BYTE');
-                        
+                        sc = writeread(instr_object, ':TIM:SCAL?');
+                        disp(['required scale = ', num2str(tscale), ', actual scale = ', num2str(sc)]);
                         
                         % acquire preambula
                         pre = writeread(instr_object, ':WAV:PRE?');
@@ -654,7 +655,7 @@ classdef MSO < handle
       
                         % check for system errors
                         errs = writeread(instr_object, ':SYST:ERR?');
-                        write(instr_object, ':RUN');                        
+                                             
                         disp(['mso -> errors: ' , errs]);
 
                         if (preambula_struct.points.value ~= points)
@@ -668,6 +669,12 @@ classdef MSO < handle
                         [revived_sig, preambula] = MSO.process_acquired_data(data, pre);
 
                         fs_instr = str2double(writeread(instr_object, ':ACQ:SRATe?'));
+
+                        if (fs_instr~=fs)
+                           error('MSO:unequalSampleRateError', ...
+                               ['The fs required = ', num2str(fs, '%e'), '. fs got = ', num2str(fs_instr, '%e'), '.']);
+
+                        end
                         
                         
                         % create "oscilloscope_data" struct with service data
@@ -678,15 +685,18 @@ classdef MSO < handle
 
 
                         read_success_flag = 1;
+                        write(instr_object, ':RUN');   
     
                     catch err
  
                         disp(['MSO::read_raw_bytes_fs ERROR: ', err.message]);
+                        write(instr_object, ':RUN'); 
  
                     end
 
                 else
-                    error('MSO:maximumIterationNumberError', 'Maximum iterations number is exceeded');                    
+                    error('MSO:maximumIterationNumberError', 'Maximum iterations number is exceeded');      
+                     
                 end
 
 
