@@ -1,18 +1,27 @@
 classdef MSO_class_based_unit_test < matlab.unittest.TestCase
     %Running tests commands:
     %   table(runtests('MSO_class_based_unit_test')) - run all tests
-    %   
+    %   run(MSO_class_based_unit_test, 'test_8GHz_fs') - run specific test
 
     properties
         osci_conn_ID
         channel_num
     end
 
+    methods (TestMethodSetup)
+        
+        function mso_sleep(testCase)
+            disp('test::Sleep');
+            pause(1);
+        end
+
+    end
+
     methods (TestClassSetup)
 
         function set_initial_parameters(testCase)
             addpath('..\Test_signals\', '..\DG_waveform_generator\', '..\MSO_oscilloscope\', '..\TF_waveform_generator');
-            testCase.channel_num = 2;
+            testCase.channel_num = 4;
             testCase.osci_conn_ID = 'USB0::0x1AB1::0x0515::MS5A244909354::0::INSTR';
         end
 
@@ -178,7 +187,7 @@ classdef MSO_class_based_unit_test < matlab.unittest.TestCase
         function test_8GHz_fs(testCase)
 
             user_fs = 8e9;
-            user_numpoints = 10e3;
+            user_numpoints = 1000e3;
             [~, oscilloscope_data] = MSO.read_raw_bytes_fs(testCase.osci_conn_ID, testCase.channel_num, user_numpoints, user_fs);
             testCase.verifyEqual(oscilloscope_data.fs_instr, user_fs);
 
