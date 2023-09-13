@@ -3,8 +3,8 @@
 clc; close all; clearvars;
 addpath('..\Test_signals\', '..\DG_waveform_generator\', '..\MSO_oscilloscope\', '..\TF_waveform_generator');
 
-% signal = Test_signals.normalized_sin();
-signal = Test_signals.normalized_ofdm();
+signal = Test_signals.normalized_sin();
+% signal = Test_signals.normalized_ofdm();
 
 figure;
     plot(signal.freqline/1e6, abs(fft(signal.data)));
@@ -126,10 +126,10 @@ disp(['plot elapsed time ', num2str(t3 - t2), ' seconds']);
 
 
 clc; close all; clearvars;
-Fs = 4*125e6;
-Ts = 1/Fs;
-Npoints = 100e3;
-TBscale = Npoints*Ts;
+Fs = 125e6;
+% Ts = 1/Fs;
+% Npoints = 100e3;
+% TBscale = Npoints*Ts;
 
 addpath('..\Test_signals\', '..\DG_waveform_generator\', '..\MSO_oscilloscope\', '..\TF_waveform_generator');
 
@@ -138,11 +138,18 @@ osci_conn_ID = 'USB0::0x1AB1::0x0515::MS5A244909354::0::INSTR';
 channel_num = 1;
 
 
-fs = 100e6;
-points = 1899e6;
+fs = 10e6;
+points = 100e3;
 
 [~, oscilloscope_data] = MSO.read_raw_bytes_fs(osci_conn_ID, channel_num, points, fs);
 
 
 assert(length(oscilloscope_data.data) == points) 
 assert(oscilloscope_data.preambula.points.value == points) 
+
+isize = length(oscilloscope_data.data);
+fs_instr = oscilloscope_data.fs_instr;
+freqline = 0:fs_instr/isize:fs_instr - 1;
+
+figure;
+    plot(freqline, abs(fft(oscilloscope_data.data)))
