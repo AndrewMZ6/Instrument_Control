@@ -17,39 +17,74 @@ classdef DSOX
             % preambula is acquired in form of csv (comma separated values)
             % so first of all split the values by ','
             split_preambula = split(preambula, ',');
+%             split_preambula = preambula;
 
             % make structure "preambula" where value and description is
             % stored for every field
-            preambula_struct.format.value = str2num(split_preambula(1));
+            preambula_struct.format.value = str2num(split_preambula{1});
             preambula_struct.format.description = '<format>: indicates 0 (BYTE), 1 (WORD), or 2 (ASC).';
 
-            preambula_struct.type.value = str2num(split_preambula(2));
+            preambula_struct.type.value = str2num(split_preambula{2});
             preambula_struct.type.description = '<type>: indicates 0 (NORMal), 1 (MAXimum), or 2 (RAW).';
 
-            preambula_struct.points.value = str2num(split_preambula(3));
+            preambula_struct.points.value = str2num(split_preambula{3});
             preambula_struct.points.description = '<points>: After the memory depth option is installed, <points> is an integer ranging from 1 to 200,000,000.';
 
-            preambula_struct.count.value = str2num(split_preambula(4));
+            preambula_struct.count.value = str2num(split_preambula{4});
             preambula_struct.count.description = '<count>: indicates the number of averages in the average sample mode. The value of <count> parameter is 1 in other modes.';
 
-            preambula_struct.xincrement.value = str2num(split_preambula(5));
+            preambula_struct.xincrement.value = str2num(split_preambula{5});
             preambula_struct.xincrement.description = '<xincrement>: indicates the time difference between two neighboring points in the X direction.';
 
-            preambula_struct.xorigin.value = str2num(split_preambula(6));
+            preambula_struct.xorigin.value = str2num(split_preambula{6});
             preambula_struct.xorigin.description = '<xorigin>: indicates the start time of the waveform data in the X direction.';
 
-            preambula_struct.xreference.value = str2num(split_preambula(7));
+            preambula_struct.xreference.value = str2num(split_preambula{7});
             preambula_struct.xreference.description = '<xreference>: indicates the reference time of the waveform data in the X direction.';
 
-            preambula_struct.yincrement.value = str2num(split_preambula(8));
+            preambula_struct.yincrement.value = str2num(split_preambula{8});
             preambula_struct.yincrement.description = '<yincrement>: indicates the step value of the waveforms in the Y direction.';
 
-            preambula_struct.yorigin.value = str2num(split_preambula(9));
+            preambula_struct.yorigin.value = str2num(split_preambula{9});
             preambula_struct.yorigin.description = '<yorigin>: indicates the vertical offset relative to the "Vertical Reference Position" in the Y direction.';
 
-            preambula_struct.yreference.value = str2num(split_preambula(10));
+            preambula_struct.yreference.value = str2num(split_preambula{10});
             preambula_struct.yreference.description = '<yreference>: indicates the vertical reference position in the Y direction.';
 
+
+        end
+
+
+
+        function [processed_data, preambula_struct] = process_acquired_data(data, preambula)
+            preambula_struct = DSOX.create_preambula_struct(preambula);
+
+            if (preambula_struct.points.value ~= length(data))
+                error('MSO:processAcquireDataError', ...
+                               ['Expected data length according to preambula = ', num2str(preambula_struct.points.value, '%e'), ...
+                               '.Actual data length = ', num2str(length(data), '%e')]);
+                
+            end
+            
+
+            yincrement = preambula_struct.yincrement.value;
+            yref = preambula_struct.yreference.value;
+
+            % create container for processed data
+            processed_data = zeros(1, length(data));
+
+            % find values that are considered positive or negative in
+            % regards to reference value "yref"
+            ypositive_indexes = find(data >= yref);
+            ynegative_indexes = find(data < yref);
+            
+            % make positive and negative data actual
+            positive_data = (data(ypositive_indexes) - yref)*yincrement;
+            negative_data = (data(ynegative_indexes) - yref)*yincrement;
+            
+            % place the data in container
+            processed_data(ypositive_indexes) = positive_data;
+            processed_data(ynegative_indexes) = negative_data;
 
         end
 
@@ -253,7 +288,7 @@ classdef DSOX
             fclose(OSCI_Obj);
         end
 
-        function [RECIEVED_FROM_OSCI, preambula_struct] = read_data(connectionID)
+        function [processed_data, d] = read_data(connectionID, chNum)
 
             % Осциллограф DSOX1102G USB visa (LAN соединение отсутствует)
             % Идентификатор (4 аргумент) берется из Keysight Connection Expert
@@ -281,7 +316,7 @@ classdef DSOX
             % fprintf(OSCI_Obj,'*RST; :AUTOSCALE'); 
             fprintf(OSCI_Obj,':STOP');
             % Источник данных - канал 1
-            fprintf(OSCI_Obj,':WAVEFORM:SOURCE CHAN1'); 
+            fprintf(OSCI_Obj, [':WAVEFORM:SOURCE CHAN', num2str(chNum)]); 
             % Set timebase to main
             fprintf(OSCI_Obj,':TIMEBASE:MODE MAIN');
             % Set up acquisition type and count. 
@@ -305,9 +340,12 @@ classdef DSOX
 
             % Get the preamble block
             preambleBlock = query(OSCI_Obj,':WAVEFORM:PREAMBLE?');
+%             split_preambula = split(preambleBlock, ',');
 
 
-            preambula_struct = DSOX.create_preambula_struct(preambleBlock);
+%             preambula_struct = DSOX.create_preambula_struct(split_preambula);
+
+
             % The preamble block contains all of the current WAVEFORM settings.  
             % It is returned in the form <preamble_block><NL> where <preamble_block> is:
             %    FORMAT        : int16 - 0 = BYTE, 1 = WORD, 2 = ASCII.
@@ -339,8 +377,12 @@ classdef DSOX
             end
 
             % Массив с полученными данными
+            
             RECIEVED_FROM_OSCI = waveform.RawData;
+            [processed_data, d] = DSOX.process_acquired_data(RECIEVED_FROM_OSCI, preambleBlock);
+            
 
+            fprintf(OSCI_Obj,':RUN');
             % Закрыть соединение с инструментом
             fclose(OSCI_Obj);
 
