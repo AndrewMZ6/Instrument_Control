@@ -321,12 +321,12 @@ classdef DSOX
             fprintf(OSCI_Obj,':TIMEBASE:MODE MAIN');
             % Set up acquisition type and count. 
             fprintf(OSCI_Obj,':ACQUIRE:TYPE NORMAL');
-            fprintf(OSCI_Obj,':ACQUIRE:COUNT 1');
+            fprintf(OSCI_Obj, [':ACQUIRE:COUNT ', num2str(chNum)]);
             % Specify 5000 points at a time by :WAV:DATA?
             fprintf(OSCI_Obj,':WAV:POINTS:MODE RAW');
             fprintf(OSCI_Obj,':WAV:POINTS 50000');
             % Now tell the instrument to digitize channel1
-            fprintf(OSCI_Obj,':DIGITIZE CHAN1');
+            fprintf(OSCI_Obj, [':DIGITIZE CHAN1', num2str(chNum)]);
             % Wait till complete
             operationComplete = str2double(query(OSCI_Obj,'*OPC?'));
             while ~operationComplete
