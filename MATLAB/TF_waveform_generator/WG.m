@@ -73,12 +73,19 @@ classdef WG
             fclose(WG_Obj);
             
         end
-        function load_data(connectionID, data, chNum, fs, ArbFileName)
-            %SENDTOWG отправить данные на генератор Waveform Generator 33500B
+        function load_data(connectionID, data, chNum, fs, amp, ArbFileName)
+            %load_data(connectionID, data, chNum, fs, amp, ArbFileName)
             %
-            %   WG.load_data(connectionID, data, chNum, fs, ArbFileName)
+            %   input parameters:
+            %       connectionID - instrument identifier
+            %       data - real valued data (not complex!)
+            %       chNum - generator output channel number
+            %       fs - sampling frequency (50 MHz by default)
+            %       amp - amplitude in Volts (100e-3 by default)
+            %       ArbFileName - name of the waveform in instrument ('Untitled' by default)
             
-            if (nargin< 5) ArbFileName = 'Untitled'; end
+            if (nargin< 6) ArbFileName = 'Untitled'; end
+            if (nargin< 5) amp = 100e-3; end
             if (nargin< 4) fs = 50e6; end
             if (nargin< 3)
                 error('Нужно передать как минимум два аргумента');
@@ -165,7 +172,7 @@ classdef WG
             % Задание частоты дискретизации
             sRate = fs;
             % Задание величины амлитуды
-            amp = 700e-3;
+            amp = amp;
             % ловушка ошибок
             
             errorstr = writeread(WG_obj, 'SYST:ERR?');
