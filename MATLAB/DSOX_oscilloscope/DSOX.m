@@ -25,10 +25,10 @@ classdef DSOX
             preambula_struct.format.description = '<format>: indicates 0 (BYTE), 1 (WORD), or 2 (ASC).';
 
             preambula_struct.type.value = str2num(split_preambula{2});
-            preambula_struct.type.description = '<type>: indicates 0 (NORMal), 1 (MAXimum), or 2 (RAW).';
+            preambula_struct.type.description = '<type>: indicates 0 (NORMal), 1 (PEAK).';
 
             preambula_struct.points.value = str2num(split_preambula{3});
-            preambula_struct.points.description = '<points>: After the memory depth option is installed, <points> is an integer ranging from 1 to 200,000,000.';
+            preambula_struct.points.description = '<points>: integer ranging from 1 to 200,000,000.';
 
             preambula_struct.count.value = str2num(split_preambula{4});
             preambula_struct.count.description = '<count>: indicates the number of averages in the average sample mode. The value of <count> parameter is 1 in other modes.';
@@ -312,77 +312,81 @@ classdef DSOX
             % Открыть соединение с инструментом
             fopen(OSCI_Obj);
 
-            % Сбросить настройки, включить авто-скалирование и остановить прибор
-            % fprintf(OSCI_Obj,'*RST; :AUTOSCALE'); 
-            fprintf(OSCI_Obj,':STOP');
-            % Источник данных - канал 1
-            fprintf(OSCI_Obj, [':WAVEFORM:SOURCE CHAN', num2str(chNum)]); 
-            % Set timebase to main
-            fprintf(OSCI_Obj,':TIMEBASE:MODE MAIN');
-            % Set up acquisition type and count. 
-            fprintf(OSCI_Obj,':ACQUIRE:TYPE NORMAL');
-            fprintf(OSCI_Obj, [':ACQUIRE:COUNT ', num2str(chNum)]);
-            % Specify 5000 points at a time by :WAV:DATA?
-            fprintf(OSCI_Obj,':WAV:POINTS:MODE RAW');
-            fprintf(OSCI_Obj,':WAV:POINTS 50000');
-            % Now tell the instrument to digitize channel1
-            fprintf(OSCI_Obj, [':DIGITIZE CHAN1', num2str(chNum)]);
-            % Wait till complete
-            operationComplete = str2double(query(OSCI_Obj,'*OPC?'));
-            while ~operationComplete
-                operationComplete = str2double(query(OSCI_Obj,'*OPC?'));
-            end
-            % Get the data back as a WORD (i.e., INT16), other options are ASCII and BYTE
-            fprintf(OSCI_Obj,':WAVEFORM:FORMAT WORD');
 
-            % Set the byte order on the instrument as well
-            fprintf(OSCI_Obj,':WAVEFORM:BYTEORDER LSBFirst');
-
-            % Get the preamble block
-            preambleBlock = query(OSCI_Obj,':WAVEFORM:PREAMBLE?');
-%             split_preambula = split(preambleBlock, ',');
+            % create counters
+            read_success_flag = 0;
+            iteration_count = 0;
 
 
-%             preambula_struct = DSOX.create_preambula_struct(split_preambula);
+            % main data acquisition loop
+            while ~read_success_flag
+                if iteration_count < 5
+                    try
+                        iteration_count = iteration_count + 1;
+                        disp(['iteration #', num2str(iteration_count)]);
 
 
-            % The preamble block contains all of the current WAVEFORM settings.  
-            % It is returned in the form <preamble_block><NL> where <preamble_block> is:
-            %    FORMAT        : int16 - 0 = BYTE, 1 = WORD, 2 = ASCII.
-            %    TYPE          : int16 - 0 = NORMAL, 1 = PEAK DETECT, 2 = AVERAGE
-            %    POINTS        : int32 - number of data points transferred.
-            %    COUNT         : int32 - 1 and is always 1.
-            %    XINCREMENT    : float64 - time difference between data points.
-            %    XORIGIN       : float64 - always the first data point in memory.
-            %    XREFERENCE    : int32 - specifies the data point associated with
-            %                            x-origin.
-            %    YINCREMENT    : float32 - voltage diff between data points.
-            %    YORIGIN       : float32 - value is the voltage at center screen.
-            %    YREFERENCE    : int32 - specifies the data point where y-origin
-            %                            occurs.
+                        fprintf(OSCI_Obj,':STOP');
+                        fprintf(OSCI_Obj, [':WAVEFORM:SOURCE CHAN', num2str(chNum)]);
+                        fprintf(OSCI_Obj,':TIMEBASE:MODE MAIN');
+                        fprintf(OSCI_Obj,':ACQUIRE:TYPE NORMAL');
+            %             fprintf(OSCI_Obj, [':ACQUIRE:COUNT ', num2str(chNum)]);
 
-            % Now send commmand to read data
-            fprintf(OSCI_Obj,':WAV:DATA?');
-
-            % read back the BINBLOCK with the data in specified format and store it in
-            % the waveform structure. FREAD removes the extra terminator in the buffer
-            waveform.RawData = binblockread(OSCI_Obj,'uint16'); fread(OSCI_Obj,1);
-
-            % Read back the error queue on the instrument
-            instrumentError = query(OSCI_Obj,':SYSTEM:ERR?');
-
-            while ~isequal(instrumentError,['+0,"No error"' char(10)])
-                disp(['Instrument Error: ' instrumentError]);
-                instrumentError = query(OSCI_Obj,':SYSTEM:ERR?');
-            end
-
-            % Массив с полученными данными
+                        fprintf(OSCI_Obj,':WAV:POINTS:MODE RAW');
+                        fprintf(OSCI_Obj,':WAV:POINTS 50000');
+                        % Now tell the instrument to digitize channel1
+                        fprintf(OSCI_Obj, [':DIGITIZE CHAN', num2str(chNum)]);
+                        % Wait till complete
+                        operationComplete = str2double(query(OSCI_Obj,'*OPC?'));
+                        while ~operationComplete
+                            operationComplete = str2double(query(OSCI_Obj,'*OPC?'));
+                        end
+                        % Get the data back as a WORD (i.e., INT16), other options are ASCII and BYTE
+                        fprintf(OSCI_Obj,':WAVEFORM:FORMAT WORD');
             
-            RECIEVED_FROM_OSCI = waveform.RawData;
-            [processed_data, d] = DSOX.process_acquired_data(RECIEVED_FROM_OSCI, preambleBlock);
+                        % Set the byte order on the instrument as well
+                        fprintf(OSCI_Obj,':WAVEFORM:BYTEORDER LSBFirst');
+            
+                        % Get the preamble block
+                        preambleBlock = query(OSCI_Obj,':WAVEFORM:PREAMBLE?');
+
+            
+                        % Now send commmand to read data
+                        fprintf(OSCI_Obj,':WAV:DATA?');
             
 
-            fprintf(OSCI_Obj,':RUN');
+                        RawData = binblockread(OSCI_Obj,'uint16'); fread(OSCI_Obj,1);
+            
+                        % Read back the error queue on the instrument
+                        instrumentError = query(OSCI_Obj,':SYSTEM:ERR?');
+            
+                        while ~isequal(instrumentError,['+0,"No error"' char(10)])
+                            disp(['Instrument Error: ' instrumentError]);
+                            instrumentError = query(OSCI_Obj,':SYSTEM:ERR?');
+                        end
+            
+
+                        [processed_data, d] = DSOX.process_acquired_data(RawData, preambleBlock);
+                        
+                        read_success_flag = 1;
+                        fprintf(OSCI_Obj,':RUN');
+
+                    catch err
+
+                        disp(['DSOX::read_data ERROR: ', err.message]);
+                        fprintf(OSCI_Obj,':RUN');
+
+                    end
+
+                else
+                    fprintf(OSCI_Obj,':RUN');    
+                    error('DSOX:maximumIterationNumberError', 'Maximum iterations number is exceeded');     
+                     
+                end
+
+
+            end
+
             % Закрыть соединение с инструментом
             fclose(OSCI_Obj);
 
