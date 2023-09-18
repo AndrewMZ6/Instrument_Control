@@ -10,6 +10,48 @@ classdef DSOX
         function instr_obj = visadev_connect(connectionID)
             instr_obj = visadev(connectionID);
         end
+        
+
+        function preambula_struct = create_preambula_struct(preambula)
+            
+            % preambula is acquired in form of csv (comma separated values)
+            % so first of all split the values by ','
+            split_preambula = split(preambula, ',');
+
+            % make structure "preambula" where value and description is
+            % stored for every field
+            preambula_struct.format.value = str2num(split_preambula(1));
+            preambula_struct.format.description = '<format>: indicates 0 (BYTE), 1 (WORD), or 2 (ASC).';
+
+            preambula_struct.type.value = str2num(split_preambula(2));
+            preambula_struct.type.description = '<type>: indicates 0 (NORMal), 1 (MAXimum), or 2 (RAW).';
+
+            preambula_struct.points.value = str2num(split_preambula(3));
+            preambula_struct.points.description = '<points>: After the memory depth option is installed, <points> is an integer ranging from 1 to 200,000,000.';
+
+            preambula_struct.count.value = str2num(split_preambula(4));
+            preambula_struct.count.description = '<count>: indicates the number of averages in the average sample mode. The value of <count> parameter is 1 in other modes.';
+
+            preambula_struct.xincrement.value = str2num(split_preambula(5));
+            preambula_struct.xincrement.description = '<xincrement>: indicates the time difference between two neighboring points in the X direction.';
+
+            preambula_struct.xorigin.value = str2num(split_preambula(6));
+            preambula_struct.xorigin.description = '<xorigin>: indicates the start time of the waveform data in the X direction.';
+
+            preambula_struct.xreference.value = str2num(split_preambula(7));
+            preambula_struct.xreference.description = '<xreference>: indicates the reference time of the waveform data in the X direction.';
+
+            preambula_struct.yincrement.value = str2num(split_preambula(8));
+            preambula_struct.yincrement.description = '<yincrement>: indicates the step value of the waveforms in the Y direction.';
+
+            preambula_struct.yorigin.value = str2num(split_preambula(9));
+            preambula_struct.yorigin.description = '<yorigin>: indicates the vertical offset relative to the "Vertical Reference Position" in the Y direction.';
+
+            preambula_struct.yreference.value = str2num(split_preambula(10));
+            preambula_struct.yreference.description = '<yreference>: indicates the vertical reference position in the Y direction.';
+
+
+        end
 
 
         function result = get_command(instr, command)
@@ -211,7 +253,7 @@ classdef DSOX
             fclose(OSCI_Obj);
         end
 
-        function RECIEVED_FROM_OSCI = read_data(connectionID)
+        function [RECIEVED_FROM_OSCI, preambula_struct] = read_data(connectionID)
 
             % Осциллограф DSOX1102G USB visa (LAN соединение отсутствует)
             % Идентификатор (4 аргумент) берется из Keysight Connection Expert
@@ -263,6 +305,9 @@ classdef DSOX
 
             % Get the preamble block
             preambleBlock = query(OSCI_Obj,':WAVEFORM:PREAMBLE?');
+
+
+            preambula_struct = DSOX.create_preambula_struct(preambleBlock);
             % The preamble block contains all of the current WAVEFORM settings.  
             % It is returned in the form <preamble_block><NL> where <preamble_block> is:
             %    FORMAT        : int16 - 0 = BYTE, 1 = WORD, 2 = ASCII.
