@@ -8,7 +8,7 @@ classdef DG
     %   frequency
     properties (Constant)
         
-        M = containers.Map([25e6, 125e6], [7, 3]);
+        M = containers.Map([25e6, 125e6, 250e6, 500e6], [7, 3, 2, 1]);
         
     end
 
@@ -40,7 +40,7 @@ classdef DG
                 Fs_instr = DG.M(fs);
             catch ME
                 if (strcmp(ME.identifier, 'MATLAB:Containers:Map:NoKey'))
-                    error('Generator sampling frequency can only be 25 MHz or 125 MHz');                    
+                    error('Generator sampling frequency can only be 25MHz, 125MHz, 250MHz, 500MHz');                    
                 end
             end
 
