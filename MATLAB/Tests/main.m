@@ -3,32 +3,49 @@
 clc; close all; clearvars;
 addpath('..\Test_signals\', '..\DG_waveform_generator\', '..\MSO_oscilloscope\', '..\TF_waveform_generator');
 
-signal = Test_signals.normalized_sin();
+
+% asddddddddddd
+fs = 25e6;
+t = 1/fs:1/fs:12800/fs;
+s = chirp(t, 0, 12800/fs, 2e6);
+figure; plot(abs(fft(s)))
+% s_s = fftshift(s);
+% signal = s.*sin(2*pi*5e6*t);
+% signal = s;
+freqline = 0:fs/12800:fs - 1;
+
+% figure; 
+%     plot(freqline*1e-6, abs(fft(signal)));
+    xlabel('frequency, MHz');
+
+
+% signal = Test_signals.normalized_sin();
 % signal = Test_signals.normalized_ofdm();
 
-figure;
-    plot(signal.freqline/1e6, abs(fft(signal.data)));
-    grid on;
-    title('Спектр тестового OFDM сигнала');
-    xlabel('Частота, МГц');
-
-
-figure;
-    plot(signal.data);
-    grid on;
-    title('Тестовый OFDM сигнал во временной области');
-    xlabel('Отсчёты');
-    ylabel('Амплитуда');
+% figure('Position', [10, 600, 600, 400]);
+%     plot(signal.freqline/1e6, abs(fft(signal.data)));
+%     grid on;
+%     title('Спектр тестового OFDM сигнала');
+%     xlabel('Частота, МГц');
+% 
+% 
+% figure('Position', [10, 100, 600, 400]);
+%     plot(signal.data);
+%     grid on;
+%     title('Тестовый OFDM сигнал во временной области');
+%     xlabel('Отсчёты');
+%     ylabel('Амплитуда');
 
 
 % dg_conn_ID = 'USB0::0x1AB1::0x0640::DG5S245900056::0::INSTR';
 dg_conn_ID = 'USB0::0x1AB1::0x0640::DG5S244900056::0::INSTR';
-data_to_load = signal.data;
+% data_to_load = signal.data;
+data_to_load = s;
 
 
 % load data
 amp = .7;
-DG.load_data(dg_conn_ID, data_to_load, signal.Fs, amp);
+DG.load_data(dg_conn_ID, data_to_load, fs, amp);
 %% Oscilloscope and MSO file
 clc; close all; 
 % clearvars;
@@ -138,8 +155,8 @@ osci_conn_ID = 'USB0::0x1AB1::0x0515::MS5A244909354::0::INSTR';
 channel_num = 1;
 
 
-fs = 10e6;
-points = 100e3;
+fs = 100e6;
+points = 50e3;
 
 [~, oscilloscope_data] = MSO.read_raw_bytes_fs(osci_conn_ID, channel_num, points, fs);
 
@@ -152,4 +169,11 @@ fs_instr = oscilloscope_data.fs_instr;
 freqline = 0:fs_instr/isize:fs_instr - 1;
 
 figure;
-    plot(freqline, abs(fft(oscilloscope_data.data)))
+    plot(oscilloscope_data.data);
+
+
+spectrum = abs(fft(oscilloscope_data.data));
+
+figure;
+    plot(freqline(2:end)*1e-6, fftshift(spectrum(2:end)));
+    xlabel('frequency, MHz');

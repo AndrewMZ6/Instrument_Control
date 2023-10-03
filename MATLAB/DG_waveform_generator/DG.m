@@ -54,9 +54,9 @@ classdef DG
             % normalize if data abolute
             data_max = max(abs(singnal_with_zeros));
 
-            if data_max > 1
-                singnal_with_zeros = singnal_with_zeros/data_max;
-            end
+            
+            singnal_with_zeros = singnal_with_zeros/data_max;
+            
 
 
             s_string = DG.stringify(singnal_with_zeros);
@@ -68,8 +68,8 @@ classdef DG
             disp(['dg -> connected to ', instr_name]);
 
             
-            interp_value = writeread(instr_object, ':DATA:POIN:INT?');
-            disp(['before load: ', interp_value]);
+%             interp_value = writeread(instr_object, ':DATA:POIN:INT?');
+%             disp(['before load: ', interp_value]);
             
             write(instr_object, [':VOLTage ', num2str(amp)]);
             write(instr_object, ':FUNCtion:ARB:MODE PLAY');
@@ -83,8 +83,8 @@ classdef DG
             write(instr_object, ':OUTPut ON');  
 
 
-            pts = writeread(instr_object, ':DATA:POINts? VOLATILE');
-            disp(['points? = ', num2str(pts)]);
+%             pts = writeread(instr_object, ':DATA:POINts? VOLATILE');
+%             disp(['points? = ', num2str(pts)]);
 
         end
     end

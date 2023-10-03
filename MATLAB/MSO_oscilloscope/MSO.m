@@ -634,8 +634,8 @@ classdef MSO < handle
                         write(instr_object, ':WAV:MODE RAW');
                         write(instr_object, [':WAV:POINts ', num2str(points)]);
                         write(instr_object, ':WAV:FORM BYTE');
-                        sc = writeread(instr_object, ':TIM:SCAL?');
-                        disp(['required scale = ', num2str(tscale), ', actual scale = ', num2str(sc)]);
+%                         sc = writeread(instr_object, ':TIM:SCAL?');
+%                         disp(['required scale = ', num2str(tscale), ', actual scale = ', num2str(sc)]);
                         
                         % acquire preambula
                         pre = writeread(instr_object, ':WAV:PRE?');
@@ -654,9 +654,9 @@ classdef MSO < handle
                         
       
                         % check for system errors
-                        errs = writeread(instr_object, ':SYST:ERR?');
+%                         errs = writeread(instr_object, ':SYST:ERR?');
                                              
-                        disp(['mso -> errors: ' , errs]);
+%                         disp(['mso -> errors: ' , errs]);
 
                         if (preambula_struct.points.value ~= points)
                             
