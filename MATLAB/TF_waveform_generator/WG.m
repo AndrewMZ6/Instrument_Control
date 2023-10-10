@@ -466,7 +466,10 @@ classdef WG
             % Закрыть соединение с инструментом
             fclose(WG_obj);
             
-            function flag = parseID(id)
+            
+        end
+
+        function flag = parseID(id)
                 flag = false;
                 len = length(id);
                 for i = 1:len
@@ -474,7 +477,13 @@ classdef WG
                         flag = true;
                     end
                 end
-            end
         end
+
+        function arb_sync(connID)
+            instr = visadev_connect(connID);
+            write(instr, 'FUNC:ARB:SYNC');
+        end
+
+
     end
 end
