@@ -241,15 +241,15 @@ classdef WG
                 disp('NO ISCHAR')
             
                 % Размещаем данные между 1 и -1
-                mx = max(abs(data));
-                data = (1*data)/mx;
+%                 mx = max(abs(data));
+%                 data = (1*data)/mx;
             
                 % Устанавливаем порядок следования байт
                 % BORD = Byte ORDer
                 write(WG_obj, 'FORM:BORD SWAP');  
                 
                 % Количество байт
-                SENT_TO_WG_Bytes=num2str(length(data) * 4); 
+                SENT_TO_WG_Bytes=num2str(length(data)*4); 
                 
                 % Создание заголовка для binblock
                 header= ['SOURce', num2str(chNum),  ':DATA:ARBitrary ', name, ', #', num2str(length(SENT_TO_WG_Bytes)), SENT_TO_WG_Bytes]; 
@@ -480,7 +480,7 @@ classdef WG
         end
 
         function arb_sync(connID)
-            instr = visadev_connect(connID);
+            instr = WG.visadev_connect(connID);
             write(instr, 'FUNC:ARB:SYNC');
         end
 
