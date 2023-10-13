@@ -17,7 +17,7 @@ connection_ID = 'USB0::0x0957::0x2807::MY57401329::0::INSTR';
 data = response;
 chNum = 1;
 amp = 0.5;
-FileName = 'NAMENAME';
+FileName = 'NAMENAME22';
 
 mrx = max(abs(data));
 data_normalized = data/mrx;

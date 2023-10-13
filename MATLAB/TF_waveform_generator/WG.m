@@ -241,29 +241,32 @@ classdef WG
                 disp('NO ISCHAR')
             
                 % Размещаем данные между 1 и -1
-%                 mx = max(abs(data));
-%                 data = (1*data)/mx;
+                mx = max(abs(data));
+                data = (1*data)/mx;
             
                 % Устанавливаем порядок следования байт
                 % BORD = Byte ORDer
                 write(WG_obj, 'FORM:BORD SWAP');  
-                
+
+
+               
                 % Количество байт
                 SENT_TO_WG_Bytes=num2str(length(data)*4); 
+
+%                 data = data/2;
+%                 data_DAC = round(data*32767);
+%                 disp(['max data_DAC = ', num2str(max(abs(data_DAC)))]);
+                data_str = WG.stringify(data);
+
                 
                 % Создание заголовка для binblock
-                header= ['SOURce', num2str(chNum),  ':DATA:ARBitrary ', name, ', #', num2str(length(SENT_TO_WG_Bytes)), SENT_TO_WG_Bytes]; 
+                command = ['SOURce', num2str(chNum),  ':DATA:ARBitrary ', name, data_str]; 
                 
-                % ловушка ошибок
-                
-                errorstr = writeread(WG_obj, 'SYST:ERR?');
-                disp(errorstr);
-                
-                % Конвертация данных в формат unsigned int8
-                binblockBytes = typecast(data, 'uint8');
-                
+
+
+
                 % Конкатенация заголовка и тела, и запись данных на инструмент
-                write(WG_obj, [header binblockBytes], 'uint8');
+                write(WG_obj, command);
                 
                 % Команда инструменту ожидать выполнения предыдущей команды до конца перед
                 % продолжением
@@ -277,11 +280,13 @@ classdef WG
                 % Выполнить команду
                 write(WG_obj, command); 
                 
-                % set current arb waveform to defined arb testrise
-                command = ['MMEM:STOR:DATA', num2str(chNum),  ' "INT:\' name '.arb"'];
+
+                % Установка амплитуды
+                command = ['SOURCE', num2str(chNum),  ':VOLT ' num2str(amp)];
                 % Выполнить команду
                 write(WG_obj, command);
-                
+
+               
                 % ловушка ошибок
                 
                 errorstr = writeread(WG_obj, 'SYST:ERR?');
@@ -296,13 +301,10 @@ classdef WG
                 write(WG_obj, command);
                 
                 % Включить нашу функцию
-                write(WG_obj, ['SOURce', num2str(chNum), ':FUNCtion ARB']); 
+%                 write(WG_obj, ['SOURce', num2str(chNum), ':FUNCtion ARB']); 
 
                                 
-                % Установка амплитуды
-                command = ['SOURCE', num2str(chNum),  ':VOLT ' num2str(amp)];
-                % Выполнить команду
-                write(WG_obj, command);
+
                 
                 % Установка смещения 
                 write(WG_obj, ['SOURCE', num2str(chNum), ':VOLT:OFFSET 0']);
@@ -483,7 +485,15 @@ classdef WG
             instr = WG.visadev_connect(connID);
             write(instr, 'FUNC:ARB:SYNC');
         end
+        
+        function s_string = stringify(data)
+            s_string = '';
 
+            for i = 1:length(data)
+                s_string = [s_string, ',', num2str(data(i))];
+            end
+            
+        end
 
     end
 end
