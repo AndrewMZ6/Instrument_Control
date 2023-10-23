@@ -11,3 +11,4 @@ dist/
 *.txt
 *.wav
 *.mat
+*venv/
